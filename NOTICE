@@ -1,0 +1,14 @@
+ 
+PyGoWave Desktop Client
+Copyright 2009 Patrick Schneider <patrick.p2k.schneider@gmail.com>
+
+This software contains code derived from the Google Wave APIs
+and documentation by Google Inc.
+
+This software makes use of Qt licensed under the GNU LGPL version 2.1
+Copyright 2009 Nokia Corporation and/or its subsidiary(-ies)
+http://qt.nokia.com
+
+This software includes parts of the Oxygen iconset which is released under the
+Creative Commons Attribution-NonCommercial-NoDerivs 2.5 License.
+http://www.oxygen-icons.org/
