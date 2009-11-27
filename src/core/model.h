@@ -21,6 +21,8 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include "pygowave_api_global.h"
+
 #include <QtCore/QObject>
 #include <QtCore/QVariant>
 #include <QtCore/QMap>
@@ -30,9 +32,18 @@
 
 namespace PyGoWave {
 
-	class Participant : public QObject
+	class ParticipantPrivate;
+	class AnnotationPrivate;
+	class ElementPrivate;
+	class GadgetElementPrivate;
+	class WaveModelPrivate;
+	class WaveletPrivate;
+	class BlipPrivate;
+
+	class PYGOWAVE_API_SHARED_EXPORT Participant : public QObject
 	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(Participant)
 		Q_PROPERTY(QByteArray id READ id)
 		Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName)
 		Q_PROPERTY(QString thumbnailUrl READ thumbnailUrl WRITE setThumbnailUrl)
@@ -71,20 +82,17 @@ namespace PyGoWave {
 		void dataChanged();
 
 	private:
-		QByteArray m_id;
-		QString m_displayName;
-		QString m_thumbnailUrl;
-		QString m_profileUrl;
-		bool m_online;
-		bool m_bot;
+		ParticipantPrivate * const pd_ptr;
 	};
 
 	class Wavelet;
 	class Blip;
 	class Operation;
 
-	class Annotation : public QObject {
+	class PYGOWAVE_API_SHARED_EXPORT Annotation : public QObject
+	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(Annotation)
 		Q_PROPERTY(QString name READ name)
 		Q_PROPERTY(int start READ start WRITE setStart)
 		Q_PROPERTY(int end READ end WRITE setEnd)
@@ -102,20 +110,17 @@ namespace PyGoWave {
 		int end() const;
 		void setEnd(int index);
 
-		QString value();
+		QString value() const;
 
 		Blip * blip() const;
 
 	private:
-		Blip * m_blip;
-		QString m_name;
-		int m_start;
-		int m_end;
-		QString m_value;
+		AnnotationPrivate * const pd_ptr;
 	};
 
-	class Element : public QObject {
+	class PYGOWAVE_API_SHARED_EXPORT Element : public QObject {
 		Q_OBJECT
+		P_DECLARE_PRIVATE(Element)
 		Q_ENUMS(Type)
 		Q_PROPERTY(int id READ id)
 		Q_PROPERTY(int type READ type)
@@ -150,20 +155,13 @@ namespace PyGoWave {
 		void setPosition(int pos);
 
 	protected:
-		QVariantMap m_properties;
-		static int newTempId();
-
-	private:
-		Blip * m_blip;
-		int m_id;
-		int m_pos;
-		Type m_type;
-
-		static int g_lastTempId;
+		Element(Blip * blip, int id, int position, Type type, const QVariantMap & properties, ElementPrivate * d);
+		ElementPrivate * const pd_ptr;
 	};
 
-	class GadgetElement : public Element {
+	class PYGOWAVE_API_SHARED_EXPORT GadgetElement : public Element {
 		Q_OBJECT
+		P_DECLARE_PRIVATE(GadgetElement)
 		Q_PROPERTY(QVariantMap fields READ fields)
 		Q_PROPERTY(QVariantMap userPrefs READ userPrefs)
 		Q_PROPERTY(QString url READ url)
@@ -185,12 +183,12 @@ namespace PyGoWave {
 	signals:
 		void stateChange();
 		void userPrefSet(const QString & key, const QString & value);
-
 	};
 
-	class WaveModel : public QObject
+	class PYGOWAVE_API_SHARED_EXPORT WaveModel : public QObject
 	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(WaveModel)
 		Q_PROPERTY(QByteArray id READ id)
 		Q_PROPERTY(QByteArray viewerId READ viewerId)
 
@@ -215,16 +213,13 @@ namespace PyGoWave {
 		void waveletAboutToBeRemoved(const QByteArray & waveletId);
 
 	private:
-		Wavelet * m_rootWavelet;
-		QByteArray m_waveId;
-		QByteArray m_viewerId;
-		QMap< QByteArray, Wavelet* > m_wavelets;
-
+		WaveModelPrivate * const pd_ptr;
 	};
 
-	class Wavelet : public QObject
+	class PYGOWAVE_API_SHARED_EXPORT Wavelet : public QObject
 	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(Wavelet)
 		Q_PROPERTY(int version READ version WRITE setVersion)
 		Q_PROPERTY(bool root READ isRoot)
 		Q_PROPERTY(QByteArray id READ id)
@@ -297,27 +292,13 @@ namespace PyGoWave {
 		void lastModifiedChanged(const QDateTime &datetime);
 
 	private:
-		void setRootBlip(Blip * blip);
-
-		WaveModel * m_wave;
-
-		QByteArray m_id;
-		Participant * m_creator;
-		QString m_title;
-		bool m_root;
-		QDateTime m_created;
-		QDateTime m_lastModified;
-		int m_version;
-
-		QMap<QByteArray, Participant*> m_participants;
-		QList<Blip*> m_blips;
-		Blip * m_rootBlip;
-		QByteArray m_status;
+		WaveletPrivate * const pd_ptr;
 	};
 
-	class Blip : public QObject
+	class PYGOWAVE_API_SHARED_EXPORT Blip : public QObject
 	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(Blip)
 		Q_PROPERTY(QByteArray id READ id)
 		Q_PROPERTY(bool root READ isRoot)
 		Q_PROPERTY(QString content READ content)
@@ -357,20 +338,12 @@ namespace PyGoWave {
 		void outOfSync();
 
 	private:
-		Wavelet * m_wavelet;
-		QByteArray m_id;
-		QString m_content;
-		QList<Element*> m_elements;
-		Blip * m_parent;
-		Participant * m_creator;
-		bool m_root;
-		QDateTime m_lastModified;
-		int m_version;
-		bool m_submitted;
-		bool m_outofsync;
-		QList<Annotation*> m_annotations;
-
+		BlipPrivate * const pd_ptr;
 	};
 }
+
+#ifdef PYGOWAVE_API_P_INCLUDE
+#  include "model_p.h"
+#endif
 
 #endif // MODEL_H

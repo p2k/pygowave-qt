@@ -21,6 +21,8 @@
 #ifndef OPERATIONS_H
 #define OPERATIONS_H
 
+#include "pygowave_api_global.h"
+
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QVariant>
@@ -29,8 +31,12 @@
 
 namespace PyGoWave {
 
-	class Operation
+	class OperationPrivate;
+	class OpManagerPrivate;
+
+	class PYGOWAVE_API_SHARED_EXPORT Operation
 	{
+		P_DECLARE_PRIVATE(Operation)
 	public:
 		enum Type {
 			DOCUMENT_NOOP = 0,
@@ -47,15 +53,16 @@ namespace PyGoWave {
 		Operation(Type op_type, const QByteArray & waveId, const QByteArray & waveletId, const QByteArray & blipId = QByteArray(), int index = -1, QVariant prop = QVariant());
 
 		Operation(const Operation & other);
+		~Operation();
 
-		Type type();
-		QByteArray waveId();
-		QByteArray waveletId();
-		QByteArray blipId();
+		Type type() const;
+		QByteArray waveId() const;
+		QByteArray waveletId() const;
+		QByteArray blipId() const;
 
-		int index();
+		int index() const;
 		void setIndex(int value);
-		QVariant property();
+		QVariant property() const;
 		void setProperty(const QVariant & property);
 
 		Operation * clone() const;
@@ -80,19 +87,13 @@ namespace PyGoWave {
 		static Operation * unserialize(const QVariantMap & obj);
 
 	private:
-		Type m_type;
-		QByteArray m_waveId;
-		QByteArray m_waveletId;
-		QByteArray m_blipId;
-		int m_index;
-		QVariant m_property;
-
-		static QString typeToString(Type type);
-		static Type typeFromString(const QString & type);
+		OperationPrivate * const pd_ptr;
 	};
 
-	class OpManager : public QObject {
+	class PYGOWAVE_API_SHARED_EXPORT OpManager : public QObject
+	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(OpManager)
 
 	public:
 		OpManager(const QByteArray & waveId, const QByteArray & waveletId, QObject * parent = NULL);
@@ -100,9 +101,9 @@ namespace PyGoWave {
 
 		bool isEmpty() const;
 
-		QByteArray waveId();
+		QByteArray waveId() const;
 
-		QByteArray waveletId();
+		QByteArray waveletId() const;
 
 		QList<Operation*> transform(Operation * input_op);
 
@@ -124,7 +125,7 @@ namespace PyGoWave {
 		void waveletAddParticipant(const QByteArray &id);
 		void waveletRemoveParticipant(const QByteArray &id);
 
-		QList<Operation*> operations();
+		QList<Operation*> operations() const;
 
 		void insertOperation(int index, Operation * op);
 		void removeOperation(int index);
@@ -137,12 +138,12 @@ namespace PyGoWave {
 		void afterOperationsInserted(int start, int end);
 
 	private:
-		QByteArray m_waveId;
-		QByteArray m_waveletId;
-		QList<Operation*> m_operations;
-
-		bool __insert(Operation * newop);
+		OpManagerPrivate * const pd_ptr;
 	};
 }
+
+#ifdef PYGOWAVE_API_P_INCLUDE
+#  include "operations_p.h"
+#endif
 
 #endif // OPERATIONS_H

@@ -19,6 +19,7 @@
  */
 
 #include "operations.h"
+#include "operations_p.h"
 
 using namespace PyGoWave;
 
@@ -51,53 +52,85 @@ using namespace PyGoWave;
 	\param prop A weakly typed property object is based
 	on the context of this operation.
 */
-Operation::Operation(Operation::Type op_type, const QByteArray & waveId, const QByteArray & waveletId, const QByteArray & blipId, int index, QVariant prop) {
-	this->m_type = op_type;
-	this->m_waveId = waveId;
-	this->m_waveletId = waveletId;
-	this->m_blipId = blipId;
-	this->m_index = index;
-	this->m_property = prop;
+Operation::Operation(Operation::Type op_type, const QByteArray & waveId, const QByteArray & waveletId, const QByteArray & blipId, int index, QVariant prop) : pd_ptr(new OperationPrivate)
+{
+	P_D(Operation);
+	d->m_type = op_type;
+	d->m_waveId = waveId;
+	d->m_waveletId = waveletId;
+	d->m_blipId = blipId;
+	d->m_index = index;
+	d->m_property = prop;
 }
 
 /*!
 	Create a copy of this operation.
 */
-Operation::Operation(const Operation & other) {
-	this->m_type = other.m_type;
-	this->m_waveId = other.m_waveId;
-	this->m_waveletId = other.m_waveletId;
-	this->m_blipId = other.m_blipId;
-	this->m_index = other.m_index;
-	this->m_property = other.m_property;
+Operation::Operation(const Operation & other) : pd_ptr(new OperationPrivate)
+{
+	P_D(Operation);
+	const OperationPrivate * other_pd = other.pd_func();
+	d->m_type = other_pd->m_type;
+	d->m_waveId = other_pd->m_waveId;
+	d->m_waveletId = other_pd->m_waveletId;
+	d->m_blipId = other_pd->m_blipId;
+	d->m_index = other_pd->m_index;
+	d->m_property = other_pd->m_property;
 }
 
-Operation::Type Operation::type() {
-	return this->m_type;
-}
-QByteArray Operation::waveId() {
-	return this->m_waveId;
-}
-QByteArray Operation::waveletId() {
-	return this->m_waveletId;
-}
-QByteArray Operation::blipId() {
-	return this->m_blipId;
-}
-int Operation::index() {
-	return this->m_index;
-}
-void Operation::setIndex(int value) {
-	this->m_index = value;
-}
-QVariant Operation::property() {
-	return this->m_property;
-}
-void Operation::setProperty(const QVariant & property) {
-	this->m_property = property;
+Operation::~Operation()
+{
+	delete this->pd_ptr;
 }
 
-Operation * Operation::clone() const {
+Operation::Type Operation::type() const
+{
+	const P_D(Operation);
+	return d->m_type;
+}
+
+QByteArray Operation::waveId() const
+{
+	const P_D(Operation);
+	return d->m_waveId;
+}
+
+QByteArray Operation::waveletId() const
+{
+	const P_D(Operation);
+	return d->m_waveletId;
+}
+
+QByteArray Operation::blipId() const
+{
+	const P_D(Operation);
+	return d->m_blipId;
+}
+
+int Operation::index() const
+{
+	const P_D(Operation);
+	return d->m_index;
+}
+void Operation::setIndex(int value)
+{
+	P_D(Operation);
+	d->m_index = value;
+}
+
+QVariant Operation::property() const
+{
+	const P_D(Operation);
+	return d->m_property;
+}
+void Operation::setProperty(const QVariant & property)
+{
+	P_D(Operation);
+	d->m_property = property;
+}
+
+Operation * Operation::clone() const
+{
 	return new Operation(*this);
 }
 
@@ -105,11 +138,13 @@ Operation * Operation::clone() const {
 	Return weather this operation is a null operation i.e. it does not
 	change anything.
 */
-bool Operation::isNull() const {
-	if (this->m_type == Operation::DOCUMENT_INSERT)
+bool Operation::isNull() const
+{
+	const P_D(Operation);
+	if (d->m_type == Operation::DOCUMENT_INSERT)
 		return this->length() == 0;
-	else if (this->m_type == Operation::DOCUMENT_DELETE)
-		return this->m_property.toInt() == 0;
+	else if (d->m_type == Operation::DOCUMENT_DELETE)
+		return d->m_property.toInt() == 0;
 	return false;
 }
 
@@ -117,15 +152,19 @@ bool Operation::isNull() const {
 	Returns if this operation is compatible to another one i.e. it could potentially influence
 	the other operation.
 */
-bool Operation::isCompatibleTo(const Operation & other) const {
+bool Operation::isCompatibleTo(const Operation & other) const
+{
 	return this->isCompatibleTo(&other);
 }
 
 /*!
 	\overload
 */
-bool Operation::isCompatibleTo(const Operation * other) const {
-	if (this->m_waveId != other->m_waveId || this->m_waveletId != other->m_waveletId || this->m_blipId != other->m_blipId)
+bool Operation::isCompatibleTo(const Operation * other) const
+{
+	const P_D(Operation);
+	const OperationPrivate * other_pd = other->pd_func();
+	if (d->m_waveId != other_pd->m_waveId || d->m_waveletId != other_pd->m_waveletId || d->m_blipId != other_pd->m_blipId)
 		return false;
 	return true;
 }
@@ -133,22 +172,28 @@ bool Operation::isCompatibleTo(const Operation * other) const {
 /*!
 	Returns true, if this op is an insertion operation.
 */
-bool Operation::isInsert() const {
-	return this->m_type == Operation::DOCUMENT_INSERT || this->m_type == Operation::DOCUMENT_ELEMENT_INSERT;
+bool Operation::isInsert() const
+{
+	const P_D(Operation);
+	return d->m_type == Operation::DOCUMENT_INSERT || d->m_type == Operation::DOCUMENT_ELEMENT_INSERT;
 }
 
 /*!
 	Returns true, if this op is a deletion operation.
 */
-bool Operation::isDelete() const {
-	return this->m_type == Operation::DOCUMENT_DELETE || this->m_type == Operation::DOCUMENT_ELEMENT_DELETE;
+bool Operation::isDelete() const
+{
+	const P_D(Operation);
+	return d->m_type == Operation::DOCUMENT_DELETE || d->m_type == Operation::DOCUMENT_ELEMENT_DELETE;
 }
 
 /*!
 	Returns true, if this op is an (attribute) change operation.
 */
-bool Operation::isChange() const {
-	return this->m_type == Operation::DOCUMENT_ELEMENT_DELTA || this->m_type == Operation::DOCUMENT_ELEMENT_SETPREF;
+bool Operation::isChange() const
+{
+	const P_D(Operation);
+	return d->m_type == Operation::DOCUMENT_ELEMENT_DELTA || d->m_type == Operation::DOCUMENT_ELEMENT_SETPREF;
 }
 
 /*!
@@ -156,12 +201,14 @@ bool Operation::isChange() const {
 	This can be interpreted as the distance a concurrent operation's index
 	must be moved to include the effects of this operation.
 */
-int Operation::length() const {
-	if (this->m_type == Operation::DOCUMENT_INSERT)
-		return this->m_property.toString().length();
-	else if (this->m_type == Operation::DOCUMENT_DELETE)
-		return this->m_property.toInt();
-	else if (this->m_type == Operation::DOCUMENT_ELEMENT_INSERT || this->m_type == Operation::DOCUMENT_ELEMENT_DELETE)
+int Operation::length() const
+{
+	const P_D(Operation);
+	if (d->m_type == Operation::DOCUMENT_INSERT)
+		return d->m_property.toString().length();
+	else if (d->m_type == Operation::DOCUMENT_DELETE)
+		return d->m_property.toInt();
+	else if (d->m_type == Operation::DOCUMENT_ELEMENT_INSERT || d->m_type == Operation::DOCUMENT_ELEMENT_DELETE)
 		return 1;
 	return 0;
 }
@@ -172,9 +219,11 @@ int Operation::length() const {
 
 	Other operations: No effect.
 */
-void Operation::resize(int value) {
-	if (this->m_type == Operation::DOCUMENT_DELETE)
-		this->m_property = (value > 0 ? value : 0);
+void Operation::resize(int value)
+{
+	P_D(Operation);
+	if (d->m_type == Operation::DOCUMENT_DELETE)
+		d->m_property = (value > 0 ? value : 0);
 }
 
 /*!
@@ -183,9 +232,11 @@ void Operation::resize(int value) {
 
 	Other operations: No effect.
 */
-void Operation::insertString(int pos, const QString & s) {
-	if (this->m_type == Operation::DOCUMENT_INSERT)
-		this->m_property = this->m_property.toString().insert(pos, s);
+void Operation::insertString(int pos, const QString & s)
+{
+	P_D(Operation);
+	if (d->m_type == Operation::DOCUMENT_INSERT)
+		d->m_property = d->m_property.toString().insert(pos, s);
 }
 
 /*!
@@ -194,23 +245,27 @@ void Operation::insertString(int pos, const QString & s) {
 
 	Other operations: No effect.
 */
-void Operation::deleteString(int pos, int length) {
-	if (this->m_type == Operation::DOCUMENT_INSERT)
-		this->m_property = this->m_property.toString().remove(pos, length);
+void Operation::deleteString(int pos, int length)
+{
+	P_D(Operation);
+	if (d->m_type == Operation::DOCUMENT_INSERT)
+		d->m_property = d->m_property.toString().remove(pos, length);
 }
 
 /*!
 	Serialize this operation into a dictionary. Official robots API format.
 */
-QVariantMap Operation::serialize() const {
+QVariantMap Operation::serialize() const
+{
+	const P_D(Operation);
 	QVariantMap ret;
-	ret["type"] = Operation::typeToString(this->m_type);
-	ret["waveId"] = QString::fromAscii(this->m_waveId);
-	ret["waveletId"] = QString::fromAscii(this->m_waveletId);
-	ret["blipId"] = QString::fromAscii(this->m_blipId);
-	ret["index"] = this->m_index;
-	if (this->m_property.isValid())
-		ret["property"] = this->m_property;
+	ret["type"] = OperationPrivate::typeToString(d->m_type);
+	ret["waveId"] = QString::fromAscii(d->m_waveId);
+	ret["waveletId"] = QString::fromAscii(d->m_waveletId);
+	ret["blipId"] = QString::fromAscii(d->m_blipId);
+	ret["index"] = d->m_index;
+	if (d->m_property.isValid())
+		ret["property"] = d->m_property;
 	else
 		ret["property"] = 0;
 	return ret;
@@ -219,9 +274,10 @@ QVariantMap Operation::serialize() const {
 /*!
 	Unserialize an operation from a dictionary.
 */
-Operation * Operation::unserialize(const QVariantMap & obj) {
+Operation * Operation::unserialize(const QVariantMap & obj)
+{
 	return new Operation(
-			Operation::typeFromString(obj["type"].toString()),
+			OperationPrivate::typeFromString(obj["type"].toString()),
 			obj["waveId"].toByteArray(),
 			obj["waveletId"].toByteArray(),
 			obj["blipId"].toByteArray(),
@@ -230,7 +286,8 @@ Operation * Operation::unserialize(const QVariantMap & obj) {
 		);
 }
 
-QString Operation::typeToString(Operation::Type type) {
+QString OperationPrivate::typeToString(Operation::Type type)
+{
 	switch (type) {
 		case Operation::DOCUMENT_NOOP:
 			return "DOCUMENT_NOOP";
@@ -254,7 +311,8 @@ QString Operation::typeToString(Operation::Type type) {
 	return "DOCUMENT_NOOP";
 }
 
-Operation::Type Operation::typeFromString(const QString & type) {
+Operation::Type OperationPrivate::typeFromString(const QString & type)
+{
 	if (type == "DOCUMENT_INSERT")
 		return Operation::DOCUMENT_INSERT;
 	else if (type == "DOCUMENT_DELETE")
@@ -321,31 +379,40 @@ Operation::Type Operation::typeFromString(const QString & type) {
 /*!
 	Constructs the op manager with a \a waveId and \a waveletId.
 */
-OpManager::OpManager(const QByteArray & waveId, const QByteArray & waveletId, QObject * parent) : QObject(parent) {
-	this->m_waveId = waveId;
-	this->m_waveletId = waveletId;
+OpManager::OpManager(const QByteArray & waveId, const QByteArray & waveletId, QObject * parent) : QObject(parent), pd_ptr(new OpManagerPrivate(this))
+{
+	P_D(OpManager);
+	d->m_waveId = waveId;
+	d->m_waveletId = waveletId;
 }
 
-OpManager::~OpManager() {
-	while (!this->m_operations.isEmpty())
-		delete this->m_operations.takeLast();
+OpManager::~OpManager()
+{
+	P_D(OpManager);
+	while (!d->m_operations.isEmpty())
+		delete d->m_operations.takeLast();
+	delete this->pd_ptr;
 }
 
 /*!
 	Return true if this manager is not holding operations.
 */
-bool OpManager::isEmpty() const {
-	return this->m_operations.isEmpty();
+bool OpManager::isEmpty() const
+{
+	const P_D(OpManager);
+	return d->m_operations.isEmpty();
 }
 
-QByteArray OpManager::waveId()
+QByteArray OpManager::waveId() const
 {
-	return this->m_waveId;
+	const P_D(OpManager);
+	return d->m_waveId;
 }
 
-QByteArray OpManager::waveletId()
+QByteArray OpManager::waveletId() const
 {
-	return this->m_waveletId;
+	const P_D(OpManager);
+	return d->m_waveletId;
 }
 
 /*!
@@ -358,13 +425,15 @@ QByteArray OpManager::waveletId()
 	results of deletion, modification and splitting; i.e. the input
 	operation is not modified by itself).
 */
-QList<Operation*> OpManager::transform(Operation * input_op) {
+QList<Operation*> OpManager::transform(Operation * input_op)
+{
+	P_D(OpManager);
 	Operation * new_op = NULL;
 	QList<Operation*> op_lst;
 	op_lst.append(input_op->clone());
 	int i = 0;
-	while (i < this->m_operations.size()) {
-		Operation * myop = this->m_operations[i];
+	while (i < d->m_operations.size()) {
+		Operation * myop = d->m_operations[i];
 		int j = 0;
 		while (j < op_lst.size()) {
 			Operation * op = op_lst[j];
@@ -509,10 +578,12 @@ QList<Operation*> OpManager::transform(Operation * input_op) {
 /*!
 	Returns the pending operations and removes them from this manager.
 */
-QList<Operation*> OpManager::fetch() {
-	QList<Operation*> ops = this->m_operations;
+QList<Operation*> OpManager::fetch()
+{
+	P_D(OpManager);
+	QList<Operation*> ops = d->m_operations;
 	emit beforeOperationsRemoved(0, ops.size() - 1);
-	this->m_operations.clear();
+	d->m_operations.clear();
 	emit afterOperationsRemoved(0, ops.size() - 1);
 	return ops;
 }
@@ -522,13 +593,15 @@ QList<Operation*> OpManager::fetch() {
 
 	\sa put operations
 */
-void OpManager::put(const QList<Operation*> & ops) {
+void OpManager::put(const QList<Operation*> & ops)
+{
+	P_D(OpManager);
 	if (ops.size() == 0)
 		return;
-	int start = this->m_operations.size();
+	int start = d->m_operations.size();
 	int end = start + ops.size() - 1;
 	emit beforeOperationsInserted(start, end);
-	this->m_operations.append(ops);
+	d->m_operations.append(ops);
 	emit afterOperationsInserted(start, end);
 }
 
@@ -538,12 +611,14 @@ void OpManager::put(const QList<Operation*> & ops) {
 
 	\sa unserialize
 */
-QVariantList OpManager::serialize(bool fetch) {
+QVariantList OpManager::serialize(bool fetch)
+{
+	P_D(OpManager);
 	QList<Operation*> ops;
 	if (fetch)
 		ops = this->fetch();
 	else
-		ops = this->m_operations;
+		ops = d->m_operations;
 
 	QVariantList out;
 	Operation * op;
@@ -575,9 +650,10 @@ void OpManager::unserialize(const QVariantList & serial_ops) {
 
 	\sa fetch put
 */
-QList<Operation*> OpManager::operations()
+QList<Operation*> OpManager::operations() const
 {
-	return this->m_operations;
+	const P_D(OpManager);
+	return d->m_operations;
 }
 
 /*!
@@ -587,9 +663,11 @@ QList<Operation*> OpManager::operations()
 	\param index The position insert the content at in ths document
 	\param content The content to insert
 */
-void OpManager::documentInsert(const QByteArray & blipId, int index, const QString & content) {
-	Operation * op = new Operation(Operation::DOCUMENT_INSERT, this->m_waveId, this->m_waveletId, blipId, index, content);
-	if (!this->__insert(op))
+void OpManager::documentInsert(const QByteArray & blipId, int index, const QString & content)
+{
+	P_D(OpManager);
+	Operation * op = new Operation(Operation::DOCUMENT_INSERT, d->m_waveId, d->m_waveletId, blipId, index, content);
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -600,9 +678,11 @@ void OpManager::documentInsert(const QByteArray & blipId, int index, const QStri
 	\param start Start of the range
 	\param end End of the range
 */
-void OpManager::documentDelete(const QByteArray & blipId, int start, int end) {
-	Operation * op = new Operation(Operation::DOCUMENT_DELETE, this->m_waveId, this->m_waveletId, blipId, start, end-start);
-	if (!this->__insert(op))
+void OpManager::documentDelete(const QByteArray & blipId, int start, int end)
+{
+	P_D(OpManager);
+	Operation * op = new Operation(Operation::DOCUMENT_DELETE, d->m_waveId, d->m_waveletId, blipId, start, end-start);
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -614,12 +694,14 @@ void OpManager::documentDelete(const QByteArray & blipId, int start, int end) {
 	\param type Element type
 	\param properties Element properties
 */
-void OpManager::documentElementInsert(const QByteArray & blipId, int index, int type, const QVariantMap & properties) {
+void OpManager::documentElementInsert(const QByteArray & blipId, int index, int type, const QVariantMap & properties)
+{
+	P_D(OpManager);
 	QVariantMap property;
 	property["type"] = type;
 	property["properties"] = properties;
-	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_INSERT, this->m_waveId, this->m_waveletId, blipId, index, property);
-	if (!this->__insert(op))
+	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_INSERT, d->m_waveId, d->m_waveletId, blipId, index, property);
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -629,9 +711,11 @@ void OpManager::documentElementInsert(const QByteArray & blipId, int index, int 
 	\param blipId The blip id that this operation is applied to
 	\param index Position of the element to delete
 */
-void OpManager::documentElementDelete(const QByteArray & blipId, int index) {
-	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_DELETE, this->m_waveId, this->m_waveletId, blipId, index, QVariant());
-	if (!this->__insert(op))
+void OpManager::documentElementDelete(const QByteArray & blipId, int index)
+{
+	P_D(OpManager);
+	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_DELETE, d->m_waveId, d->m_waveletId, blipId, index, QVariant());
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -642,9 +726,11 @@ void OpManager::documentElementDelete(const QByteArray & blipId, int index) {
 	\param index Position of the element
 	\param delta Delta to apply to the element
 */
-void OpManager::documentElementDelta(const QByteArray & blipId, int index, const QVariantMap & delta) {
-	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_DELTA, this->m_waveId, this->m_waveletId, blipId, index, delta);
-	if (!this->__insert(op))
+void OpManager::documentElementDelta(const QByteArray & blipId, int index, const QVariantMap & delta)
+{
+	P_D(OpManager);
+	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_DELTA, d->m_waveId, d->m_waveletId, blipId, index, delta);
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -656,12 +742,14 @@ void OpManager::documentElementDelta(const QByteArray & blipId, int index, const
 	\param key Name of the UserPref
 	\param value Value of the UserPref
 */
-void OpManager::documentElementSetpref(const QByteArray & blipId, int index, const QString & key, const QString & value) {
+void OpManager::documentElementSetpref(const QByteArray & blipId, int index, const QString & key, const QString & value)
+{
+	P_D(OpManager);
 	QVariantMap property;
 	property["key"] = key;
 	property["value"] = value;
-	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_SETPREF, this->m_waveId, this->m_waveletId, blipId, index, property);
-	if (!this->__insert(op))
+	Operation * op = new Operation(Operation::DOCUMENT_ELEMENT_SETPREF, d->m_waveId, d->m_waveletId, blipId, index, property);
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -672,8 +760,9 @@ void OpManager::documentElementSetpref(const QByteArray & blipId, int index, con
 */
 void OpManager::waveletAddParticipant(const QByteArray &id)
 {
-	Operation * op = new Operation(Operation::WAVELET_ADD_PARTICIPANT, this->m_waveId, this->m_waveletId, QByteArray(), -1, QString::fromAscii(id));
-	if (!this->__insert(op))
+	P_D(OpManager);
+	Operation * op = new Operation(Operation::WAVELET_ADD_PARTICIPANT, d->m_waveId, d->m_waveletId, QByteArray(), -1, QString::fromAscii(id));
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -684,8 +773,9 @@ void OpManager::waveletAddParticipant(const QByteArray &id)
 */
 void OpManager::waveletRemoveParticipant(const QByteArray &id)
 {
-	Operation * op = new Operation(Operation::WAVELET_REMOVE_PARTICIPANT, this->m_waveId, this->m_waveletId, QByteArray(), -1, QString::fromAscii(id));
-	if (!this->__insert(op))
+	P_D(OpManager);
+	Operation * op = new Operation(Operation::WAVELET_REMOVE_PARTICIPANT, d->m_waveId, d->m_waveletId, QByteArray(), -1, QString::fromAscii(id));
+	if (!d->mergeInsert(op))
 		delete op;
 }
 
@@ -694,7 +784,9 @@ void OpManager::waveletRemoveParticipant(const QByteArray &id)
 	Inserts and probably merges an operation into the manager's
 	operation list.
 */
-bool OpManager::__insert(Operation * newop) {
+bool OpManagerPrivate::mergeInsert(Operation * newop)
+{
+	P_Q(OpManager);
 	Operation * op = NULL;
 	int i = 0;
 	if (newop->type() == Operation::DOCUMENT_ELEMENT_DELTA) {
@@ -708,7 +800,7 @@ bool OpManager::__insert(Operation * newop) {
 					delta[key] = newdelta[key];
 				dmap["delta"] = delta;
 				op->setProperty(dmap);
-				emit operationChanged(i);
+				emit q->operationChanged(i);
 				return false;
 			}
 		}
@@ -719,7 +811,7 @@ bool OpManager::__insert(Operation * newop) {
 		if (newop->type() == Operation::DOCUMENT_INSERT && op->type() == Operation::DOCUMENT_INSERT) {
 			if (newop->index() >= op->index() && newop->index() <= op->index()+op->length()) {
 				op->insertString(newop->index() - op->index(), newop->property().toString());
-				emit operationChanged(i);
+				emit q->operationChanged(i);
 				return false;
 			}
 		}
@@ -735,38 +827,38 @@ bool OpManager::__insert(Operation * newop) {
 					newop->resize(newop->length() - remain);
 				}
 				if (op->isNull()) {
-					this->removeOperation(i);
+					q->removeOperation(i);
 					i--;
 				}
 				else
-					emit operationChanged(i);
+					emit q->operationChanged(i);
 				if (newop->isNull())
 					return false;
 			}
 			else if (newop->index() < op->index() && newop->index()+newop->length() > op->index()) {
 				if (newop->index()+newop->length() >= op->index()+op->length()) {
 					newop->resize(newop->length() - op->length());
-					this->removeOperation(i);
+					q->removeOperation(i);
 					i--;
 				}
 				else {
 					int dlength = newop->index()+newop->length() - op->index();
 					newop->resize(newop->length() - dlength);
 					op->deleteString(0, dlength);
-					emit operationChanged(i);
+					emit q->operationChanged(i);
 				}
 			}
 		}
 		else if (newop->type() == Operation::DOCUMENT_DELETE && op->type() == Operation::DOCUMENT_DELETE) {
 			if (newop->index() == op->index()) {
 				op->resize(op->length() + newop->length());
-				emit operationChanged(i);
+				emit q->operationChanged(i);
 				return false;
 			}
 			if (newop->index() == (op->index() - newop->length())) {
 				op->setIndex(op->index() - newop->length());
 				op->resize(op->length() + newop->length());
-				emit operationChanged(i);
+				emit q->operationChanged(i);
 				return false;
 			}
 		}
@@ -776,7 +868,7 @@ bool OpManager::__insert(Operation * newop) {
 				return false;
 		}
 	}
-	this->insertOperation(i + 1, newop);
+	q->insertOperation(i + 1, newop);
 	return true;
 }
 
@@ -789,10 +881,11 @@ bool OpManager::__insert(Operation * newop) {
 */
 void OpManager::insertOperation(int index, Operation * op)
 {
-	if (index > this->m_operations.size() || index < 0)
+	P_D(OpManager);
+	if (index > d->m_operations.size() || index < 0)
 		return;
 	emit beforeOperationsInserted(index, index);
-	this->m_operations.insert(index, op);
+	d->m_operations.insert(index, op);
 	emit afterOperationsInserted(index, index);
 }
 
@@ -804,9 +897,10 @@ void OpManager::insertOperation(int index, Operation * op)
 */
 void OpManager::removeOperation(int index)
 {
-	if (index < 0 || index >= this->m_operations.size())
+	P_D(OpManager);
+	if (index < 0 || index >= d->m_operations.size())
 		return;
 	emit beforeOperationsRemoved(index, index);
-	delete this->m_operations.takeAt(index);
+	delete d->m_operations.takeAt(index);
 	emit afterOperationsRemoved(index, index);
 }

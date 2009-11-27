@@ -53,17 +53,21 @@ using namespace PyGoWave;
 /*!
 	Constructs a Participant with the given \a id (= address).
 */
-Participant::Participant(const QByteArray & id)
+Participant::Participant(const QByteArray & id) : pd_ptr(new ParticipantPrivate)
 {
-	this->m_id = id;
-	this->m_bot = false;
-	this->m_online = false;
+	P_D(Participant);
+	d->m_id = id;
+	d->m_bot = false;
+	d->m_online = false;
 }
 
 /*!
 	Destroys the Participant
 */
-Participant::~Participant() {}
+Participant::~Participant()
+{
+	delete this->pd_ptr;
+}
 
 /*!
 	\property Participant::id
@@ -71,7 +75,8 @@ Participant::~Participant() {}
 */
 QByteArray Participant::id() const
 {
-	return this->m_id;
+	const P_D(Participant);
+	return d->m_id;
 }
 
 /*!
@@ -80,12 +85,14 @@ QByteArray Participant::id() const
 */
 QString Participant::displayName() const
 {
-	return this->m_displayName;
+	const P_D(Participant);
+	return d->m_displayName;
 }
 void Participant::setDisplayName(const QString & value)
 {
-	if (this->m_displayName != value) {
-		this->m_displayName = value;
+	P_D(Participant);
+	if (d->m_displayName != value) {
+		d->m_displayName = value;
 		emit dataChanged();
 	}
 }
@@ -96,12 +103,14 @@ void Participant::setDisplayName(const QString & value)
 */
 QString Participant::thumbnailUrl() const
 {
-	return this->m_thumbnailUrl;
+	const P_D(Participant);
+	return d->m_thumbnailUrl;
 }
 void Participant::setThumbnailUrl(const QString & value)
 {
-	if (this->m_thumbnailUrl != value) {
-		this->m_thumbnailUrl = value;
+	P_D(Participant);
+	if (d->m_thumbnailUrl != value) {
+		d->m_thumbnailUrl = value;
 		emit dataChanged();
 	}
 }
@@ -112,12 +121,14 @@ void Participant::setThumbnailUrl(const QString & value)
 */
 QString Participant::profileUrl() const
 {
-	return this->m_profileUrl;
+	const P_D(Participant);
+	return d->m_profileUrl;
 }
 void Participant::setProfileUrl(const QString & value)
 {
-	if (this->m_profileUrl != value) {
-		this->m_profileUrl = value;
+	P_D(Participant);
+	if (d->m_profileUrl != value) {
+		d->m_profileUrl = value;
 		emit dataChanged();
 	}
 }
@@ -128,12 +139,14 @@ void Participant::setProfileUrl(const QString & value)
 */
 bool Participant::isBot() const
 {
-	return this->m_bot;
+	const P_D(Participant);
+	return d->m_bot;
 }
 void Participant::setBot(bool value)
 {
-	if (this->m_bot != value) {
-		this->m_bot = value;
+	P_D(Participant);
+	if (d->m_bot != value) {
+		d->m_bot = value;
 		emit dataChanged();
 	}
 }
@@ -146,12 +159,14 @@ void Participant::setBot(bool value)
 */
 bool Participant::isOnline() const
 {
-	return this->m_online;
+	const P_D(Participant);
+	return d->m_online;
 }
 void Participant::setOnline(bool value)
 {
-	if (this->m_online != value) {
-		this->m_online = value;
+	P_D(Participant);
+	if (d->m_online != value) {
+		d->m_online = value;
 		emit onlineStateChanged(value);
 	}
 }
@@ -165,12 +180,13 @@ void Participant::setOnline(bool value)
 */
 void Participant::updateData(const QVariantMap & obj, const QString &server)
 {
-	this->m_displayName = obj["displayName"].toString();
-	this->m_thumbnailUrl = obj["thumbnailUrl"].toString();
-	if (this->m_thumbnailUrl.startsWith("/"))
-		this->m_thumbnailUrl.prepend("http://" + server);
-	this->m_profileUrl = obj["profileUrl"].toString();
-	this->m_bot = obj["isBot"].toBool();
+	P_D(Participant);
+	d->m_displayName = obj["displayName"].toString();
+	d->m_thumbnailUrl = obj["thumbnailUrl"].toString();
+	if (d->m_thumbnailUrl.startsWith("/"))
+		d->m_thumbnailUrl.prepend("http://" + server);
+	d->m_profileUrl = obj["profileUrl"].toString();
+	d->m_bot = obj["isBot"].toBool();
 	emit dataChanged();
 }
 
@@ -180,10 +196,11 @@ void Participant::updateData(const QVariantMap & obj, const QString &server)
 */
 QVariantMap Participant::toGadgetFormat() const
 {
+	const P_D(Participant);
 	QVariantMap map;
-	map["id"] = this->m_id;
-	map["displayName"] = this->m_displayName;
-	map["thumbnailUrl"] = this->m_thumbnailUrl;
+	map["id"] = d->m_id;
+	map["displayName"] = d->m_displayName;
+	map["thumbnailUrl"] = d->m_thumbnailUrl;
 	return map;
 }
 
@@ -210,11 +227,12 @@ QVariantMap Participant::toGadgetFormat() const
 
 	\a viewerId is the Participant ID of the wave viewer.
 */
-WaveModel::WaveModel(const QByteArray & waveId, const QByteArray & viewerId)
+WaveModel::WaveModel(const QByteArray & waveId, const QByteArray & viewerId) : pd_ptr(new WaveModelPrivate)
 {
-	this->m_rootWavelet = NULL;
-	this->m_waveId = waveId;
-	this->m_viewerId = viewerId;
+	P_D(WaveModel);
+	d->m_rootWavelet = NULL;
+	d->m_waveId = waveId;
+	d->m_viewerId = viewerId;
 }
 
 /*!
@@ -223,8 +241,10 @@ WaveModel::WaveModel(const QByteArray & waveId, const QByteArray & viewerId)
 */
 WaveModel::~WaveModel()
 {
-	foreach (QByteArray id, this->m_wavelets.keys())
+	P_D(WaveModel);
+	foreach (QByteArray id, d->m_wavelets.keys())
 		this->removeWavelet(id);
+	delete this->pd_ptr;
 }
 
 /*!
@@ -233,7 +253,8 @@ WaveModel::~WaveModel()
 */
 QByteArray WaveModel::id() const
 {
-	return this->m_waveId;
+	const P_D(WaveModel);
+	return d->m_waveId;
 }
 
 /*!
@@ -242,7 +263,8 @@ QByteArray WaveModel::id() const
 */
 QByteArray WaveModel::viewerId() const
 {
-	return this->m_viewerId;
+	const P_D(WaveModel);
+	return d->m_viewerId;
 }
 
 /*!
@@ -279,8 +301,9 @@ void WaveModel::loadFromSnapshot(const QVariantMap & obj, const QMap<QByteArray,
 */
 Wavelet * WaveModel::createWavelet(const QByteArray & id, Participant * creator, const QString & title, bool isRoot, const QDateTime & created, const QDateTime & lastModified, int version)
 {
+	P_D(WaveModel);
 	Wavelet * w = new Wavelet(this, id, creator, title, isRoot, created, lastModified, version);
-	this->m_wavelets[id] = w;
+	d->m_wavelets[id] = w;
 	emit waveletAdded(id, isRoot);
 	return w;
 }
@@ -290,9 +313,10 @@ Wavelet * WaveModel::createWavelet(const QByteArray & id, Participant * creator,
 */
 Wavelet * WaveModel::wavelet(const QByteArray & id) const
 {
-	if (!this->m_wavelets.contains(id))
+	const P_D(WaveModel);
+	if (!d->m_wavelets.contains(id))
 		return NULL;
-	return this->m_wavelets[id];
+	return d->m_wavelets[id];
 }
 
 /*!
@@ -300,7 +324,8 @@ Wavelet * WaveModel::wavelet(const QByteArray & id) const
 */
 QList<Wavelet*> WaveModel::allWavelets() const
 {
-	return this->m_wavelets.values();
+	const P_D(WaveModel);
+	return d->m_wavelets.values();
 }
 
 /*!
@@ -308,7 +333,8 @@ QList<Wavelet*> WaveModel::allWavelets() const
 */
 Wavelet * WaveModel::rootWavelet() const
 {
-	return this->m_rootWavelet;
+	const P_D(WaveModel);
+	return d->m_rootWavelet;
 }
 
 /*!
@@ -317,7 +343,8 @@ Wavelet * WaveModel::rootWavelet() const
 */
 void WaveModel::setRootWavelet(Wavelet * wavelet)
 {
-	this->m_rootWavelet = wavelet;
+	P_D(WaveModel);
+	d->m_rootWavelet = wavelet;
 }
 
 /*!
@@ -325,13 +352,14 @@ void WaveModel::setRootWavelet(Wavelet * wavelet)
 */
 void WaveModel::removeWavelet(const QByteArray & waveletId)
 {
-	if (!this->m_wavelets.contains(waveletId))
+	P_D(WaveModel);
+	if (!d->m_wavelets.contains(waveletId))
 		return;
 
 	emit waveletAboutToBeRemoved(waveletId);
-	Wavelet * wavelet = this->m_wavelets.take(waveletId);
-	if (wavelet == this->m_rootWavelet)
-		this->m_rootWavelet = NULL;
+	Wavelet * wavelet = d->m_wavelets.take(waveletId);
+	if (wavelet == d->m_rootWavelet)
+		d->m_rootWavelet = NULL;
 	wavelet->deleteLater();
 }
 
@@ -395,35 +423,40 @@ void WaveModel::removeWavelet(const QByteArray & waveletId)
 
 	\a version - Version of the Wavelet
 */
-Wavelet::Wavelet(WaveModel * wave, const QByteArray & id, Participant* creator, const QString & title, bool isRoot, const QDateTime & created, const QDateTime & lastModified, int version) : QObject(wave)
+Wavelet::Wavelet(WaveModel * wave, const QByteArray & id, Participant* creator, const QString & title, bool isRoot, const QDateTime & created, const QDateTime & lastModified, int version) : QObject(wave), pd_ptr(new WaveletPrivate)
 {
-	this->m_wave = wave;
-	this->m_id = id;
-	this->m_creator = creator;
-	this->m_title = title;
-	this->m_root = isRoot;
-	this->m_created = created;
-	this->m_lastModified = lastModified;
-	this->m_version = version;
-	this->m_rootBlip = NULL;
-	this->m_status = "clean";
+	P_D(Wavelet);
+	d->m_wave = wave;
+	d->m_id = id;
+	d->m_creator = creator;
+	d->m_title = title;
+	d->m_root = isRoot;
+	d->m_created = created;
+	d->m_lastModified = lastModified;
+	d->m_version = version;
+	d->m_rootBlip = NULL;
+	d->m_status = "clean";
 
 	if (isRoot) {
 		if (wave->rootWavelet() == NULL)
 			wave->setRootWavelet(this);
 		else
-			this->m_root = false;
+			d->m_root = false;
 	}
 }
 
 /*!
 	Destroys the Wavelet object.
 */
-Wavelet::~Wavelet() {}
+Wavelet::~Wavelet()
+{
+	delete this->pd_ptr;
+}
 
 Participant * Wavelet::creator() const
 {
-	return this->m_creator;
+	const P_D(Wavelet);
+	return d->m_creator;
 }
 
 /*!
@@ -432,11 +465,13 @@ Participant * Wavelet::creator() const
 */
 int Wavelet::version() const
 {
-	return this->m_version;
+	const P_D(Wavelet);
+	return d->m_version;
 }
 void Wavelet::setVersion(int value)
 {
-	this->m_version = value;
+	P_D(Wavelet);
+	d->m_version = value;
 }
 
 
@@ -448,13 +483,15 @@ void Wavelet::setVersion(int value)
 */
 QString Wavelet::title() const
 {
-	return this->m_title;
+	const P_D(Wavelet);
+	return d->m_title;
 }
 void Wavelet::setTitle(const QString &title)
 {
-	if (this->m_title == title)
+	P_D(Wavelet);
+	if (d->m_title == title)
 		return;
-	this->m_title = title;
+	d->m_title = title;
 	emit titleChanged(title);
 }
 
@@ -464,7 +501,8 @@ void Wavelet::setTitle(const QString &title)
 */
 bool Wavelet::isRoot() const
 {
-	return this->m_root;
+	const P_D(Wavelet);
+	return d->m_root;
 }
 
 /*!
@@ -473,7 +511,8 @@ bool Wavelet::isRoot() const
 */
 QByteArray Wavelet::id() const
 {
-	return this->m_id;
+	const P_D(Wavelet);
+	return d->m_id;
 }
 
 /*!
@@ -482,7 +521,8 @@ QByteArray Wavelet::id() const
 */
 QByteArray Wavelet::waveId() const
 {
-	return this->m_wave->id();
+	const P_D(Wavelet);
+	return d->m_wave->id();
 }
 
 /*!
@@ -490,7 +530,8 @@ QByteArray Wavelet::waveId() const
 */
 WaveModel * Wavelet::waveModel() const
 {
-	return this->m_wave;
+	const P_D(Wavelet);
+	return d->m_wave;
 }
 
 /*!
@@ -500,8 +541,9 @@ WaveModel * Wavelet::waveModel() const
 */
 void Wavelet::addParticipant(Participant * participant)
 {
-	if (!this->m_participants.contains(participant->id())) {
-		this->m_participants[participant->id()] = participant;
+	P_D(Wavelet);
+	if (!d->m_participants.contains(participant->id())) {
+		d->m_participants[participant->id()] = participant;
 		emit participantsChanged();
 	}
 }
@@ -513,8 +555,9 @@ void Wavelet::addParticipant(Participant * participant)
 */
 void Wavelet::removeParticipant(const QByteArray & participantId)
 {
-	if (this->m_participants.contains(participantId)) {
-		this->m_participants.remove(participantId);
+	P_D(Wavelet);
+	if (d->m_participants.contains(participantId)) {
+		d->m_participants.remove(participantId);
 		emit participantsChanged();
 	}
 }
@@ -525,8 +568,9 @@ void Wavelet::removeParticipant(const QByteArray & participantId)
 */
 Participant * Wavelet::participant(const QByteArray & id) const
 {
-	if (this->m_participants.contains(id))
-		return this->m_participants[id];
+	const P_D(Wavelet);
+	if (d->m_participants.contains(id))
+		return d->m_participants[id];
 	else
 		return NULL;
 }
@@ -537,7 +581,8 @@ Participant * Wavelet::participant(const QByteArray & id) const
 */
 int Wavelet::participantCount() const
 {
-	return this->m_participants.size();
+	const P_D(Wavelet);
+	return d->m_participants.size();
 }
 
 /*!
@@ -545,7 +590,8 @@ int Wavelet::participantCount() const
 */
 QList<Participant*> Wavelet::allParticipants() const
 {
-	return this->m_participants.values();
+	const P_D(Wavelet);
+	return d->m_participants.values();
 }
 
 /*!
@@ -553,7 +599,8 @@ QList<Participant*> Wavelet::allParticipants() const
 */
 QList<QByteArray> Wavelet::allParticipantIDs() const
 {
-	return this->m_participants.keys();
+	const P_D(Wavelet);
+	return d->m_participants.keys();
 }
 
 /*!
@@ -562,9 +609,10 @@ QList<QByteArray> Wavelet::allParticipantIDs() const
 */
 QVariantMap Wavelet::allParticipantsForGadget() const
 {
+	const P_D(Wavelet);
 	QVariantMap ret;
-	foreach (QByteArray id, this->m_participants.keys())
-		ret[id] = this->m_participants[id]->toGadgetFormat();
+	foreach (QByteArray id, d->m_participants.keys())
+		ret[id] = d->m_participants[id]->toGadgetFormat();
 	return ret;
 }
 
@@ -577,7 +625,8 @@ QVariantMap Wavelet::allParticipantsForGadget() const
 */
 Blip * Wavelet::appendBlip(const QByteArray & id, const QString & content, const QList<Element*> & elements, Participant * creator, bool isRoot, const QDateTime & lastModified, int version, bool submitted)
 {
-	return this->insertBlip(this->m_blips.size(), id, content, elements, creator, isRoot, lastModified, version, submitted);
+	P_D(Wavelet);
+	return this->insertBlip(d->m_blips.size(), id, content, elements, creator, isRoot, lastModified, version, submitted);
 }
 
 /*!
@@ -589,8 +638,9 @@ Blip * Wavelet::appendBlip(const QByteArray & id, const QString & content, const
 */
 Blip * Wavelet::insertBlip(int index, const QByteArray & id, const QString & content, const QList<Element*> & elements, Participant * creator, bool isRoot, const QDateTime & lastModified, int version, bool submitted)
 {
+	P_D(Wavelet);
 	Blip * blip = new Blip(this, id, content, elements, NULL, creator, isRoot, lastModified, version, submitted);
-	this->m_blips.insert(index, blip);
+	d->m_blips.insert(index, blip);
 	emit blipInserted(index, id);
 	return blip;
 }
@@ -600,9 +650,10 @@ Blip * Wavelet::insertBlip(int index, const QByteArray & id, const QString & con
 */
 Blip * Wavelet::blipByIndex(int index) const
 {
-	if (index < 0 || index >= this->m_blips.size())
+	const P_D(Wavelet);
+	if (index < 0 || index >= d->m_blips.size())
 		return NULL;
-	return this->m_blips.at(index);
+	return d->m_blips.at(index);
 }
 
 /*!
@@ -611,7 +662,8 @@ Blip * Wavelet::blipByIndex(int index) const
 */
 Blip * Wavelet::blipById(const QByteArray & id) const
 {
-	foreach (Blip * blip, this->m_blips) {
+	const P_D(Wavelet);
+	foreach (Blip * blip, d->m_blips) {
 		if (blip->id() == id)
 			return blip;
 	}
@@ -623,7 +675,8 @@ Blip * Wavelet::blipById(const QByteArray & id) const
 */
 QList<Blip*> Wavelet::allBlips() const
 {
-	return this->m_blips;
+	const P_D(Wavelet);
+	return d->m_blips;
 }
 
 /*!
@@ -632,8 +685,9 @@ QList<Blip*> Wavelet::allBlips() const
 */
 QList<QByteArray> Wavelet::allBlipIDs() const
 {
+	const P_D(Wavelet);
 	QList<QByteArray> ids;
-	foreach (Blip * blip, this->m_blips)
+	foreach (Blip * blip, d->m_blips)
 		ids.append(blip->id());
 	return ids;
 }
@@ -642,7 +696,7 @@ QList<QByteArray> Wavelet::allBlipIDs() const
 	\internal
 	Sets the root Blip of this Wavelet
 */
-void Wavelet::setRootBlip(Blip * blip)
+void WaveletPrivate::setRootBlip(Blip * blip)
 {
 	this->m_rootBlip = blip;
 }
@@ -655,12 +709,14 @@ void Wavelet::setRootBlip(Blip * blip)
 */
 QByteArray Wavelet::status() const
 {
-	return this->m_status;
+	const P_D(Wavelet);
+	return d->m_status;
 }
 void Wavelet::setStatus(const QByteArray & status)
 {
-	if (this->m_status != status) {
-		this->m_status = status;
+	P_D(Wavelet);
+	if (d->m_status != status) {
+		d->m_status = status;
 		emit statusChange(status);
 	}
 }
@@ -671,7 +727,8 @@ void Wavelet::setStatus(const QByteArray & status)
 */
 QDateTime Wavelet::created() const
 {
-	return this->m_created;
+	const P_D(Wavelet);
+	return d->m_created;
 }
 
 /*!
@@ -680,13 +737,15 @@ QDateTime Wavelet::created() const
 */
 QDateTime Wavelet::lastModified() const
 {
-	return this->m_lastModified;
+	const P_D(Wavelet);
+	return d->m_lastModified;
 }
 void Wavelet::setLastModified(const QDateTime &value)
 {
-	if (this->m_lastModified == value)
+	P_D(Wavelet);
+	if (d->m_lastModified == value)
 		return;
-	this->m_lastModified = value;
+	d->m_lastModified = value;
 	emit lastModifiedChanged(value);
 }
 
@@ -870,27 +929,31 @@ void Wavelet::loadBlipsFromSnapshot(const QVariantMap &blips, const QByteArray &
 
 	\a submitted - True if this Blip is submitted
 */
-Blip::Blip(Wavelet * wavelet, const QByteArray & id, const QString & content, const QList<Element*> & elements, Blip * parent, Participant * creator, bool isRoot, const QDateTime & lastModified, int version, bool submitted) : QObject(wavelet)
+Blip::Blip(Wavelet * wavelet, const QByteArray & id, const QString & content, const QList<Element*> & elements, Blip * parent, Participant * creator, bool isRoot, const QDateTime & lastModified, int version, bool submitted) : QObject(wavelet), pd_ptr(new BlipPrivate)
 {
-	this->m_wavelet = wavelet;
-	this->m_id = id;
-	this->m_parent = parent;
-	this->m_content = content;
-	this->m_elements = elements;
+	P_D(Blip);
+	d->m_wavelet = wavelet;
+	d->m_id = id;
+	d->m_parent = parent;
+	d->m_content = content;
+	d->m_elements = elements;
 	foreach (Element * element, elements)
 		element->setBlip(this);
-	this->m_creator = creator;
-	this->m_root = isRoot;
-	this->m_lastModified = lastModified;
-	this->m_version = version;
-	this->m_submitted = submitted;
-	this->m_outofsync = false;
+	d->m_creator = creator;
+	d->m_root = isRoot;
+	d->m_lastModified = lastModified;
+	d->m_version = version;
+	d->m_submitted = submitted;
+	d->m_outofsync = false;
 }
 
 /*!
 	Destroys the Blip object.
 */
-Blip::~Blip() {}
+Blip::~Blip()
+{
+	delete this->pd_ptr;
+}
 
 /*!
 	\property Blip::id
@@ -898,7 +961,8 @@ Blip::~Blip() {}
 */
 QByteArray Blip::id() const
 {
-	return this->m_id;
+	const P_D(Blip);
+	return d->m_id;
 }
 
 /*!
@@ -906,7 +970,8 @@ QByteArray Blip::id() const
 */
 Wavelet * Blip::wavelet() const
 {
-	return this->m_wavelet;
+	const P_D(Blip);
+	return d->m_wavelet;
 }
 
 /*!
@@ -915,7 +980,8 @@ Wavelet * Blip::wavelet() const
 */
 bool Blip::isRoot() const
 {
-	return this->m_root;
+	const P_D(Blip);
+	return d->m_root;
 }
 
 /*!
@@ -923,7 +989,8 @@ bool Blip::isRoot() const
 */
 Element * Blip::elementById(int id) const
 {
-	foreach (Element * element, this->m_elements) {
+	const P_D(Blip);
+	foreach (Element * element, d->m_elements) {
 		if (element->id() == id)
 			return element;
 	}
@@ -935,7 +1002,8 @@ Element * Blip::elementById(int id) const
 */
 Element * Blip::elementAt(int index) const
 {
-	foreach (Element * element, this->m_elements) {
+	const P_D(Blip);
+	foreach (Element * element, d->m_elements) {
 		if (element->position() == index)
 			return element;
 	}
@@ -947,8 +1015,9 @@ Element * Blip::elementAt(int index) const
 */
 QList<Element*> Blip::elementsWithin(int start, int end) const
 {
+	const P_D(Blip);
 	QList<Element*> lst;
-	foreach (Element * element, this->m_elements) {
+	foreach (Element * element, d->m_elements) {
 		if (element->position() >= start && element->position() < end)
 			lst.append(element);
 	}
@@ -960,7 +1029,8 @@ QList<Element*> Blip::elementsWithin(int start, int end) const
 */
 QList<Element*> Blip::allElements() const
 {
-	return this->m_elements;
+	const P_D(Blip);
+	return d->m_elements;
 }
 
 /*!
@@ -972,23 +1042,24 @@ QList<Element*> Blip::allElements() const
 */
 void Blip::insertText(int index, const QString & text, bool noevent)
 {
-	this->m_content.insert(index, text);
+	P_D(Blip);
+	d->m_content.insert(index, text);
 
 	int length = text.length();
 
-	foreach (Element * element, this->m_elements) {
+	foreach (Element * element, d->m_elements) {
 		if (element->position() >= index)
 			element->setPosition(element->position() + length);
 	}
 
-	foreach (Annotation * anno, this->m_annotations) {
+	foreach (Annotation * anno, d->m_annotations) {
 		if (anno->start() >= index) {
 			anno->setStart(anno->start() + length);
 			anno->setEnd(anno->end() + length);
 		}
 	}
 
-	this->m_wavelet->setStatus("dirty");
+	d->m_wavelet->setStatus("dirty");
 	if (!noevent)
 		emit insertedText(index, QString(text));
 }
@@ -1002,21 +1073,22 @@ void Blip::insertText(int index, const QString & text, bool noevent)
 */
 void Blip::deleteText(int index, int length, bool noevent)
 {
-	this->m_content.remove(index, length);
+	P_D(Blip);
+	d->m_content.remove(index, length);
 
-	foreach (Element * element, this->m_elements) {
+	foreach (Element * element, d->m_elements) {
 		if (element->position() >= index)
 			element->setPosition(element->position() - length);
 	}
 
-	foreach (Annotation * anno, this->m_annotations) {
+	foreach (Annotation * anno, d->m_annotations) {
 		if (anno->start() >= index) {
 			anno->setStart(anno->start() - length);
 			anno->setEnd(anno->end() - length);
 		}
 	}
 
-	this->m_wavelet->setStatus("dirty");
+	d->m_wavelet->setStatus("dirty");
 	if (!noevent)
 		emit deletedText(index, length);
 }
@@ -1030,6 +1102,7 @@ void Blip::deleteText(int index, int length, bool noevent)
 */
 void Blip::insertElement(int index, Element::Type type, const QVariantMap & properties, bool noevent)
 {
+	P_D(Blip);
 	this->insertText(index, "\n", true);
 
 	Element * elt;
@@ -1037,9 +1110,9 @@ void Blip::insertElement(int index, Element::Type type, const QVariantMap & prop
 		elt = new GadgetElement(this, -1, index, properties);
 	else
 		elt = new Element(this, -1, index, type, properties);
-	this->m_elements.append(elt);
+	d->m_elements.append(elt);
 
-	this->m_wavelet->setStatus("dirty");
+	d->m_wavelet->setStatus("dirty");
 	if (!noevent)
 		emit insertedElement(index);
 }
@@ -1053,11 +1126,11 @@ void Blip::insertElement(int index, Element::Type type, const QVariantMap & prop
 */
 void Blip::deleteElement(int index, bool noevent)
 {
-
-	for (int i = 0; i < this->m_elements.length(); i++) {
-		Element * elt = this->m_elements.at(i);
+	P_D(Blip);
+	for (int i = 0; i < d->m_elements.length(); i++) {
+		Element * elt = d->m_elements.at(i);
 		if (elt->position() == index) {
-			this->m_elements.takeAt(i);
+			d->m_elements.takeAt(i);
 			this->deleteText(index, 1, true);
 			if (!noevent)
 				emit deletedElement(index);
@@ -1099,7 +1172,8 @@ void Blip::setElementUserpref(int index, const QString & key, const QString & va
 */
 QString Blip::content() const
 {
-	return this->m_content;
+	const P_D(Blip);
+	return d->m_content;
 }
 
 /*!
@@ -1110,10 +1184,11 @@ QString Blip::content() const
 	is tentative and subject to change.
 */
 bool Blip::checkSync(const QByteArray & sum) {
-	QByteArray mysum = QCryptographicHash::hash(this->m_content.toUtf8(), QCryptographicHash::Sha1).toHex();
+	P_D(Blip);
+	QByteArray mysum = QCryptographicHash::hash(d->m_content.toUtf8(), QCryptographicHash::Sha1).toHex();
 	if (sum != mysum) {
 		emit outOfSync();
-		this->m_outofsync = true;
+		d->m_outofsync = true;
 		return false;
 	}
 	return true;
@@ -1135,26 +1210,31 @@ bool Blip::checkSync(const QByteArray & sum) {
 	The annotation's parent Blip, a \a name, \a start and \a end indexes as
 	well as the annotation's \a value must be provided.
 */
-Annotation::Annotation(Blip * blip, const QString & name, int start, int end, const QString & value) : QObject(blip)
+Annotation::Annotation(Blip * blip, const QString & name, int start, int end, const QString & value) : QObject(blip), pd_ptr(new AnnotationPrivate)
 {
-	this->m_blip = blip;
-	this->m_name = name;
-	this->m_start = start;
-	this->m_end = end;
-	this->m_value = value;
+	P_D(Annotation);
+	d->m_blip = blip;
+	d->m_name = name;
+	d->m_start = start;
+	d->m_end = end;
+	d->m_value = value;
 }
 
 /*!
 	Destroys the annotation.
 */
-Annotation::~Annotation() {}
+Annotation::~Annotation()
+{
+	delete this->pd_ptr;
+}
 
 /*!
 	Returns the Blip on which this element resides.
 */
 Blip * Annotation::blip() const
 {
-	return this->m_blip;
+	const P_D(Annotation);
+	return d->m_blip;
 }
 
 /*!
@@ -1163,7 +1243,8 @@ Blip * Annotation::blip() const
 */
 QString Annotation::name() const
 {
-	return this->m_name;
+	const P_D(Annotation);
+	return d->m_name;
 }
 
 /*!
@@ -1172,11 +1253,13 @@ QString Annotation::name() const
 */
 int Annotation::start() const
 {
-	return this->m_start;
+	const P_D(Annotation);
+	return d->m_start;
 }
 void Annotation::setStart(int index)
 {
-	this->m_start = index;
+	P_D(Annotation);
+	d->m_start = index;
 }
 
 /*!
@@ -1185,20 +1268,23 @@ void Annotation::setStart(int index)
 */
 int Annotation::end() const
 {
-	return this->m_end;
+	const P_D(Annotation);
+	return d->m_end;
 }
 void Annotation::setEnd(int index)
 {
-	this->m_end = index;
+	P_D(Annotation);
+	d->m_end = index;
 }
 
 /*!
 	\property Annotation::value
 	\brief the value of this annotation.
 */
-QString Annotation::value()
+QString Annotation::value() const
 {
-	return this->m_value;
+	const P_D(Annotation);
+	return d->m_value;
 }
 
 
@@ -1247,22 +1333,38 @@ QString Annotation::value()
 	The \a position is the character position within the text, an Element usually
 	takes a newline character as placeholder.
 */
-Element::Element(Blip * blip, int id, int position, Element::Type type, const QVariantMap & properties) : QObject(blip)
+Element::Element(Blip * blip, int id, int position, Element::Type type, const QVariantMap & properties) : QObject(blip), pd_ptr(new ElementPrivate)
 {
-	this->m_blip = blip;
+	P_D(Element);
+	d->m_blip = blip;
 	if (id < 0)
-		this->m_id = Element::newTempId();
+		d->m_id = ElementPrivate::newTempId();
 	else
-		this->m_id = id;
-	this->m_pos = position;
-	this->m_type = type;
-	this->m_properties = properties;
+		d->m_id = id;
+	d->m_pos = position;
+	d->m_type = type;
+	d->m_properties = properties;
+}
+
+Element::Element(Blip * blip, int id, int position, Element::Type type, const QVariantMap & properties, ElementPrivate * d) : QObject(blip), pd_ptr(d)
+{
+	d->m_blip = blip;
+	if (id < 0)
+		d->m_id = ElementPrivate::newTempId();
+	else
+		d->m_id = id;
+	d->m_pos = position;
+	d->m_type = type;
+	d->m_properties = properties;
 }
 
 /*!
 	Destroys the Element.
 */
-Element::~Element() {}
+Element::~Element()
+{
+	delete this->pd_ptr;
+}
 
 /*!
 	Returns the Blip on which this element resides.
@@ -1271,7 +1373,8 @@ Element::~Element() {}
 */
 Blip * Element::blip() const
 {
-	return this->m_blip;
+	const P_D(Element);
+	return d->m_blip;
 }
 
 /*!
@@ -1279,8 +1382,9 @@ Blip * Element::blip() const
 */
 void Element::setBlip(Blip * blip)
 {
+	P_D(Element);
 	this->setParent(blip);
-	this->m_blip = blip;
+	d->m_blip = blip;
 }
 
 /*!
@@ -1293,7 +1397,8 @@ void Element::setBlip(Blip * blip)
 */
 int Element::id() const
 {
-	return this->m_id;
+	const P_D(Element);
+	return d->m_id;
 }
 
 /*!
@@ -1302,7 +1407,8 @@ int Element::id() const
 */
 Element::Type Element::type() const
 {
-	return this->m_type;
+	const P_D(Element);
+	return d->m_type;
 }
 
 /*!
@@ -1311,22 +1417,24 @@ Element::Type Element::type() const
 */
 int Element::position() const
 {
-	return this->m_pos;
+	const P_D(Element);
+	return d->m_pos;
 }
 void Element::setPosition(int pos)
 {
-	this->m_pos = pos;
+	P_D(Element);
+	d->m_pos = pos;
 }
 
-int Element::g_lastTempId = 0;
+int ElementPrivate::g_lastTempId = 0;
 
 /*!
 	Creates a new temporary ID.
 */
-int Element::newTempId()
+int ElementPrivate::newTempId()
 {
-	Element::g_lastTempId--;
-	return Element::g_lastTempId;
+	ElementPrivate::g_lastTempId--;
+	return ElementPrivate::g_lastTempId;
 }
 
 /*!
@@ -1348,7 +1456,7 @@ int Element::newTempId()
 	Constructs a new GadgetElement
 */
 GadgetElement::GadgetElement(Blip * blip, int id, int position, const QVariantMap & properties)
-		: Element(blip, id, position, Element::GADGET, properties) {}
+		: Element(blip, id, position, Element::GADGET, properties, new GadgetElementPrivate) {}
 
 /*!
 	Destroys the GadgetElement
@@ -1361,8 +1469,9 @@ GadgetElement::~GadgetElement() {}
 */
 QVariantMap GadgetElement::fields() const
 {
-	if (this->m_properties.contains("fields"))
-		return this->m_properties["fields"].toMap();
+	const P_D(GadgetElement);
+	if (d->m_properties.contains("fields"))
+		return d->m_properties["fields"].toMap();
 	else
 		return QVariantMap();
 }
@@ -1373,8 +1482,9 @@ QVariantMap GadgetElement::fields() const
 */
 QVariantMap GadgetElement::userPrefs() const
 {
-	if (this->m_properties.contains("userprefs"))
-		return this->m_properties["userprefs"].toMap();
+	const P_D(GadgetElement);
+	if (d->m_properties.contains("userprefs"))
+		return d->m_properties["userprefs"].toMap();
 	else
 		return QVariantMap();
 }
@@ -1385,8 +1495,9 @@ QVariantMap GadgetElement::userPrefs() const
 */
 QString GadgetElement::url() const
 {
-	if (this->m_properties.contains("url"))
-		return this->m_properties["url"].toString();
+	const P_D(GadgetElement);
+	if (d->m_properties.contains("url"))
+		return d->m_properties["url"].toString();
 	else
 		return QString();
 }
@@ -1398,6 +1509,7 @@ QString GadgetElement::url() const
 */
 void GadgetElement::applyDelta(const QVariantMap & delta)
 {
+	P_D(GadgetElement);
 	QVariantMap fields = this->fields();
 
 	foreach (QString key, delta.keys()) {
@@ -1410,7 +1522,7 @@ void GadgetElement::applyDelta(const QVariantMap & delta)
 			fields[key] = data;
 	}
 
-	this->m_properties["fields"] = fields;
+	d->m_properties["fields"] = fields;
 	emit stateChange();
 }
 
@@ -1420,9 +1532,10 @@ void GadgetElement::applyDelta(const QVariantMap & delta)
 */
 void GadgetElement::setUserPref(const QString & key, const QString & value, bool noevent)
 {
+	P_D(GadgetElement);
 	QVariantMap userprefs = this->userPrefs();
 	userprefs[key] = value;
-	this->m_properties["userprefs"] = userprefs;
+	d->m_properties["userprefs"] = userprefs;
 	if (!noevent)
 		emit userPrefSet(key, value);
 }

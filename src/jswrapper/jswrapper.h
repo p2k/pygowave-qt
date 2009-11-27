@@ -29,6 +29,8 @@
 #include <QtCore/QStringList>
 
 class QWebFrame;
+class JSWrapperPrivate;
+class JSWrapperFactoryPrivate;
 
 class JSWrapper : public QObject
 {
@@ -47,12 +49,7 @@ protected:
 
 private:
 	Q_DISABLE_COPY(JSWrapper)
-
-	QString m_objectClassName;
-	QObject * m_object;
-	QString m_objectId;
-	QWebFrame * m_webFrame;
-	JSWrapper * m_parent;
+	JSWrapperPrivate * const d;
 };
 
 class JSWrapperFactory : public QObject
@@ -73,20 +70,15 @@ public:
 protected:
 	virtual JSWrapper * createWrapper(const QString &className, const QString &objectId, JSWrapper * parent) = 0;
 
-public slots:
+public Q_SLOTS:
 	QObject * createWrapper(const QString &className, const QString &objectId, QObject * parent);
 
-private slots:
+private Q_SLOTS:
 	void javaScriptWindowObjectCleared();
 
 private:
 	Q_DISABLE_COPY(JSWrapperFactory)
-
-	QList<JSWrapper*> m_tlWrappers;
-	QWebFrame * m_webFrame;
-	QString m_jsObjName;
-
-	static int g_factoryId;
+	JSWrapperFactoryPrivate * const d;
 };
 
 #endif // JSWRAPPER_H

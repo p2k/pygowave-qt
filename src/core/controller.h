@@ -21,6 +21,8 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include "pygowave_api_global.h"
+
 #include <QtCore/QVariant>
 #include <QtNetwork/QAbstractSocket>
 
@@ -41,9 +43,12 @@ namespace PyGoWave {
 	class Participant;
 	class OpManager;
 
-	class Controller : public QObject
+	class ControllerPrivate;
+
+	class PYGOWAVE_API_SHARED_EXPORT Controller : public QObject
 	{
 		Q_OBJECT
+		P_DECLARE_PRIVATE(Controller)
 
 	public:
 		enum ClientState {
@@ -60,12 +65,12 @@ namespace PyGoWave {
 		void disconnectFromHost();
 		QString hostName() const;
 
-		ClientState state();
+		ClientState state() const;
 
 		QAbstractItemModel * waveListModel();
-		Participant * participant(const QByteArray &id);
-		WaveModel * wave(const QByteArray &id);
-		Wavelet * wavelet(const QByteArray &id);
+		Participant * participant(const QByteArray &id) const;
+		WaveModel * wave(const QByteArray &id) const;
+		Wavelet * wavelet(const QByteArray &id) const;
 
 		int searchForParticipant(const QString &);
 
@@ -93,73 +98,27 @@ namespace PyGoWave {
 		void createNewWavelet(const QByteArray &waveId, const QString &title);
 		void leaveWavelet(const QByteArray &waveletId);
 
-	private slots:
-		void on_conn_socketConnected();
-		void on_conn_socketDisconnected();
-		void on_conn_frameReceived();
-		void on_conn_socketStateChanged(QAbstractSocket::SocketState);
-
-		void on_pingTimer_timeout();
-		void on_pendingTimer_timeout();
-
-		void mcached_afterOperationsInserted(int start, int end);
-		void wavelet_participantsChanged();
-
 	private:
 		Q_DISABLE_COPY(Controller)
 
-		QStompClient * conn;
-		QJson::Serializer * jserializer;
-		QJson::Parser * jparser;
-		QTimer * pingTimer;
-		QTimer * pendingTimer;
+		Q_PRIVATE_SLOT(pd_func(), void _q_conn_socketConnected())
+		Q_PRIVATE_SLOT(pd_func(), void _q_conn_socketDisconnected())
+		Q_PRIVATE_SLOT(pd_func(), void _q_conn_frameReceived())
+		Q_PRIVATE_SLOT(pd_func(), void _q_conn_socketStateChanged(QAbstractSocket::SocketState))
 
-		QString m_stompServer;
-		int m_stompPort;
-		QByteArray m_stompUsername;
-		QByteArray m_stompPassword;
+		Q_PRIVATE_SLOT(pd_func(), void _q_pingTimer_timeout())
+		Q_PRIVATE_SLOT(pd_func(), void _q_pendingTimer_timeout())
 
-		QString m_username;
-		QString m_password;
+		Q_PRIVATE_SLOT(pd_func(), void _q_mcached_afterOperationsInserted(int start, int end))
+		Q_PRIVATE_SLOT(pd_func(), void _q_wavelet_participantsChanged())
 
-		QByteArray m_waveAccessKeyTx;
-		QByteArray m_waveAccessKeyRx;
-		QByteArray m_viewerId;
-
-		ClientState m_state;
-
-		QMap<QByteArray,WaveModel*> m_allWaves;
-		QMap<QByteArray,Wavelet*> m_allWavelets;
-		QMap<QByteArray,Participant*> m_allParticipants;
-
-		QMap<QByteArray,OpManager*> mcached;
-		QMap<QByteArray,OpManager*> mpending;
-		QMap<QByteArray,bool> ispending;
-
-		int m_lastSearchId;
-		QByteArray m_createdWaveId;
-
-		void addWave(WaveModel * wave, bool initial);
-		void removeWave(const QByteArray &id, bool deleteObjects);
-		void clearWaves(bool deleteObjects);
-
-		void sendJson(const QByteArray & dest, const QString &type, const QVariant &property = QVariant());
-		void subscribeWavelet(const QByteArray &id, bool open = true);
-		void unsubscribeWavelet(const QByteArray &id, bool close = true);
-		void processMessage(const QByteArray &waveletId, const QString &type, const QVariant &property = QVariant());
-
-		Wavelet * newWaveletByDict(WaveModel * wave, const QByteArray &waveletId, const QVariantMap &waveletDict);
-		void updateWaveletByDict(Wavelet * wavelet, const QVariantMap &waveletDict);
-		void collateParticipants(const QList<QByteArray> & participants);
-		void collateParticipants(const QByteArray & participant);
-		quint64 timestamp();
-		bool hasPendingOperations(const QByteArray &waveletId);
-		void transferOperations(const QByteArray &waveletId);
-
-		void queueMessageBundle(Wavelet * wavelet, const QVariant &serial_ops, int version, const QVariantMap &blipsums);
-		void processMessageBundle(Wavelet * wavelet, const QVariant &serial_ops, int version, const QVariantMap &blipsums);
+		ControllerPrivate * const pd_ptr;
 	};
 
 }
+
+#ifdef PYGOWAVE_API_P_INCLUDE
+#  include "controller_p.h"
+#endif
 
 #endif // CONTROLLER_H

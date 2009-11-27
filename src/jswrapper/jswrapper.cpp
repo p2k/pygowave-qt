@@ -19,39 +19,40 @@
  */
 
 #include "jswrapper.h"
+#include "jswrapper_p.h"
 
 #include <qjson/serializer.h>
 
 #include <QtCore/QFile>
 #include <QtWebKit/QWebFrame>
 
-int JSWrapperFactory::g_factoryId = 0;
+int JSWrapperFactoryPrivate::g_factoryId = 0;
 
-JSWrapper::JSWrapper(QWebFrame * webFrame, QObject * object, const QString &objectId, JSWrapper * parent) : QObject(parent)
+JSWrapper::JSWrapper(QWebFrame * webFrame, QObject * object, const QString &objectId, JSWrapper * parent) : QObject(parent), d(new JSWrapperPrivate)
 {
-	this->m_webFrame = webFrame;
-	this->m_object = object;
-	this->m_objectClassName = object->metaObject()->className();
-	this->m_parent = parent;
+	d->m_webFrame = webFrame;
+	d->m_object = object;
+	d->m_objectClassName = object->metaObject()->className();
+	d->m_parent = parent;
 	if (parent)
-		this->m_objectId = QString("%1@%2").arg(objectId).arg(parent->objectId());
+		d->m_objectId = QString("%1@%2").arg(objectId).arg(parent->objectId());
 	else
-		this->m_objectId = objectId;
+		d->m_objectId = objectId;
 }
 
 QObject * JSWrapper::object() const
 {
-	return this->m_object;
+	return d->m_object;
 }
 
 QString JSWrapper::objectId() const
 {
-	return this->m_objectId;
+	return d->m_objectId;
 }
 
 JSWrapper * JSWrapper::parent() const
 {
-	return this->m_parent;
+	return d->m_parent;
 }
 
 void JSWrapper::forwardSignal(const QString &signalName, const QVariant &args)
@@ -59,21 +60,21 @@ void JSWrapper::forwardSignal(const QString &signalName, const QVariant &args)
 	QJson::Serializer jserializer;
 	QString js;
 	if (!args.isValid()) {
-		js = QString("jswrapper.objects.forwardSignal('%1', '%2', '%3');").arg(this->m_objectClassName, this->objectId(), signalName);
-		///qDebug("JSWrapper::forwardSignal: Forwarding signal '%s' for %s '%s'", qPrintable(signalName), qPrintable(this->m_objectClassName), qPrintable(this->objectId()));
+		js = QString("jswrapper.objects.forwardSignal('%1', '%2', '%3');").arg(d->m_objectClassName, this->objectId(), signalName);
+		///qDebug("JSWrapper::forwardSignal: Forwarding signal '%s' for %s '%s'", qPrintable(signalName), qPrintable(d->m_objectClassName), qPrintable(this->objectId()));
 	}
 	else {
 		QString s_args = QString::fromUtf8(jserializer.serialize(args));
-		js = QString("jswrapper.objects.forwardSignal('%1', '%2', '%3', %4);").arg(this->m_objectClassName, this->objectId(), signalName, s_args);
-		///qDebug("JSWrapper::forwardSignal: Forwarding signal '%s' for %s '%s' with args: %s", qPrintable(signalName), qPrintable(this->m_objectClassName), qPrintable(this->objectId()), qPrintable(s_args));
+		js = QString("jswrapper.objects.forwardSignal('%1', '%2', '%3', %4);").arg(d->m_objectClassName, this->objectId(), signalName, s_args);
+		///qDebug("JSWrapper::forwardSignal: Forwarding signal '%s' for %s '%s' with args: %s", qPrintable(signalName), qPrintable(d->m_objectClassName), qPrintable(this->objectId()), qPrintable(s_args));
 	}
-	this->m_webFrame->evaluateJavaScript(js);
+	d->m_webFrame->evaluateJavaScript(js);
 }
 
 
-JSWrapperFactory::JSWrapperFactory(QObject * parent) : QObject(parent)
+JSWrapperFactory::JSWrapperFactory(QObject * parent) : QObject(parent), d(new JSWrapperFactoryPrivate)
 {
-	this->m_webFrame = NULL;
+	d->m_webFrame = NULL;
 }
 
 JSWrapperFactory::~JSWrapperFactory()
@@ -83,20 +84,20 @@ JSWrapperFactory::~JSWrapperFactory()
 
 void JSWrapperFactory::registerFactory(QWebFrame * webFrame)
 {
-	if (this->m_webFrame) {
+	if (d->m_webFrame) {
 		qWarning("JSWrapperFactory: Cannot register factory to more than one web frame.");
 		return;
 	}
-	this->m_webFrame = webFrame;
+	d->m_webFrame = webFrame;
 	connect(webFrame, SIGNAL(javaScriptWindowObjectCleared()), SLOT(javaScriptWindowObjectCleared()));
-	this->m_jsObjName = QString("__JSWrapperFactory%1").arg(JSWrapperFactory::g_factoryId++);
-	webFrame->addToJavaScriptWindowObject(this->m_jsObjName, this);
-	webFrame->evaluateJavaScript(QString("jswrapper.factory.registerFactory(%1);").arg(this->m_jsObjName));
+	d->m_jsObjName = QString("__JSWrapperFactory%1").arg(JSWrapperFactoryPrivate::g_factoryId++);
+	webFrame->addToJavaScriptWindowObject(d->m_jsObjName, this);
+	webFrame->evaluateJavaScript(QString("jswrapper.factory.registerFactory(%1);").arg(d->m_jsObjName));
 }
 
 QString JSWrapperFactory::javaScriptObjectName() const
 {
-	return this->m_jsObjName;
+	return d->m_jsObjName;
 }
 
 QObject * JSWrapperFactory::createWrapper(const QString &className, const QString &objectId, QObject * parent)
@@ -105,13 +106,13 @@ QObject * JSWrapperFactory::createWrapper(const QString &className, const QStrin
 	if (!wrapper)
 		return NULL;
 	if (wrapper->parent() == NULL) // Top level wrappers
-		this->m_tlWrappers.append(wrapper);
+		d->m_tlWrappers.append(wrapper);
 	return wrapper;
 }
 
 void JSWrapperFactory::javaScriptWindowObjectCleared()
 {
-	while (!this->m_tlWrappers.isEmpty()) // Delete top level wrappers
-		delete this->m_tlWrappers.takeLast();
-	this->m_webFrame = NULL;
+	while (!d->m_tlWrappers.isEmpty()) // Delete top level wrappers
+		delete d->m_tlWrappers.takeLast();
+	d->m_webFrame = NULL;
 }

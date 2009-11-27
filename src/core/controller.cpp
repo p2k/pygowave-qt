@@ -31,84 +31,96 @@
 #include <QtCore/QRegExp>
 #include <QtCore/QTimer>
 
+#include "controller_p.h"
+
 using namespace PyGoWave;
 
-Controller::Controller(QObject * parent) : QObject(parent)
+Controller::Controller(QObject * parent) : QObject(parent), pd_ptr(new ControllerPrivate(this))
 {
-	this->m_state = Controller::ClientDisconnected;
+	P_D(Controller);
+	d->m_state = Controller::ClientDisconnected;
 
-	this->m_stompServer = "localhost";
-	this->m_stompPort = 61613;
-	this->m_stompUsername = "pygowave_client";
-	this->m_stompPassword = "pygowave_client";
+	d->m_stompServer = "localhost";
+	d->m_stompPort = 61613;
+	d->m_stompUsername = "pygowave_client";
+	d->m_stompPassword = "pygowave_client";
 
-	this->jparser = new QJson::Parser();
-	this->jserializer = new QJson::Serializer();
+	d->jparser = new QJson::Parser();
+	d->jserializer = new QJson::Serializer();
 
-	this->conn = new QStompClient(this);
-	this->conn->setObjectName("conn");
+	d->conn = new QStompClient(this);
 
-	this->pingTimer = new QTimer(this);
-	this->pingTimer->setObjectName("pingTimer");
-	this->pingTimer->setInterval(20000);
-	this->pendingTimer = new QTimer(this);
-	this->pendingTimer->setObjectName("pendingTimer");
-	this->pendingTimer->setInterval(10000);
+	d->pingTimer = new QTimer(this);
+	d->pingTimer->setInterval(20000);
+	d->pendingTimer = new QTimer(this);
+	d->pendingTimer->setInterval(10000);
 
-	this->m_lastSearchId = 0;
+	d->m_lastSearchId = 0;
 
-	QMetaObject::connectSlotsByName(this);
+	connect(d->conn, SIGNAL(socketConnected()), this, SLOT(_q_conn_socketConnected()));
+	connect(d->conn, SIGNAL(socketDisconnected()), this, SLOT(_q_conn_socketDisconnected()));
+	connect(d->conn, SIGNAL(frameReceived()), this, SLOT(_q_conn_frameReceived()));
+	connect(d->conn, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)), this, SLOT(_q_conn_socketStateChanged(QAbstractSocket::SocketState)));
+	connect(d->pingTimer, SIGNAL(timeout()), this, SLOT(_q_pingTimer_timeout()));
+	connect(d->pendingTimer, SIGNAL(timeout()), this, SLOT(_q_pendingTimer_timeout()));
 }
 
 Controller::~Controller()
 {
-	delete this->jparser;
-	delete this->jserializer;
-	foreach (QByteArray id, this->m_allParticipants.keys())
-		delete this->m_allParticipants.take(id);
+	P_D(Controller);
+	delete d->jparser;
+	delete d->jserializer;
+	foreach (QByteArray id, d->m_allParticipants.keys())
+		delete d->m_allParticipants.take(id);
+	delete d;
 }
 
 void Controller::connectToHost(const QString &stompServer, const QString & username, const QString & password, int stompPort, const QByteArray & stompUsername, const QByteArray & stompPassword)
 {
-	this->m_stompServer = stompServer;
-	this->m_stompPort = stompPort;
-	this->m_stompUsername = stompUsername;
-	this->m_stompPassword = stompPassword;
+	P_D(Controller);
+	d->m_stompServer = stompServer;
+	d->m_stompPort = stompPort;
+	d->m_stompUsername = stompUsername;
+	d->m_stompPassword = stompPassword;
 	this->reconnectToHost(username, password);
 }
 
 void Controller::reconnectToHost(const QString & username, const QString & password)
 {
-	this->m_username = username;
-	this->m_password = password;
-	qDebug("Controller: Connecting to %s:%d...", qPrintable(this->m_stompServer), this->m_stompPort);
-	this->conn->connectToHost(this->m_stompServer, this->m_stompPort);
+	P_D(Controller);
+	d->m_username = username;
+	d->m_password = password;
+	qDebug("Controller: Connecting to %s:%d...", qPrintable(d->m_stompServer), d->m_stompPort);
+	d->conn->connectToHost(d->m_stompServer, d->m_stompPort);
 }
 
 void Controller::disconnectFromHost()
 {
-	if (this->conn->socketState() == QAbstractSocket::ConnectedState) {
-		this->sendJson("manager", "DISCONNECT", QVariant());
-		this->conn->logout();
+	P_D(Controller);
+	if (d->conn->socketState() == QAbstractSocket::ConnectedState) {
+		d->sendJson("manager", "DISCONNECT", QVariant());
+		d->conn->logout();
 	}
 }
 
 QString Controller::hostName() const
 {
-	return this->m_stompServer;
+	const P_D(Controller);
+	return d->m_stompServer;
 }
 
-void Controller::addWave(WaveModel * wave, bool initial)
+void ControllerPrivate::addWave(WaveModel * wave, bool initial)
 {
+	P_Q(Controller);
 	Q_ASSERT(!this->m_allWaves.contains(wave->id()));
 	this->m_allWaves[wave->id()] = wave;
 	foreach (Wavelet * wavelet, wave->allWavelets()) {
 		this->m_allWavelets[wavelet->id()] = wavelet;
-		OpManager * mcached = new OpManager(wavelet->waveId(), wavelet->id(), this);
-		connect(mcached, SIGNAL(afterOperationsInserted(int,int)), this, SLOT(mcached_afterOperationsInserted(int,int)));
-		connect(wavelet, SIGNAL(participantsChanged()), this, SLOT(wavelet_participantsChanged()));
+		OpManager * mcached = new OpManager(wavelet->waveId(), wavelet->id(), q);
+		q->connect(mcached, SIGNAL(afterOperationsInserted(int,int)), q, SLOT(_q_mcached_afterOperationsInserted(int,int)));
+		q->connect(wavelet, SIGNAL(participantsChanged()), q, SLOT(_q_wavelet_participantsChanged()));
 		this->mcached[wavelet->id()] = mcached;
-		this->mpending[wavelet->id()] = new OpManager(wavelet->waveId(), wavelet->id(), this);
+		this->mpending[wavelet->id()] = new OpManager(wavelet->waveId(), wavelet->id(), q);
 		this->ispending[wavelet->id()] = false;
 	}
 	bool created = false;
@@ -116,13 +128,14 @@ void Controller::addWave(WaveModel * wave, bool initial)
 		this->m_createdWaveId.clear();
 		created = true;
 	}
-	emit waveAdded(wave->id(), created, initial);
+	emit q->waveAdded(wave->id(), created, initial);
 }
 
-void Controller::removeWave(const QByteArray &id, bool deleteObject)
+void ControllerPrivate::removeWave(const QByteArray &id, bool deleteObject)
 {
+	P_Q(Controller);
 	Q_ASSERT(this->m_allWaves.contains(id));
-	emit waveAboutToBeRemoved(id);
+	emit q->waveAboutToBeRemoved(id);
 	WaveModel * wave = this->m_allWaves.take(id);
 	foreach (Wavelet * wavelet, wave->allWavelets())
 		this->m_allWavelets.remove(wavelet->id());
@@ -130,31 +143,34 @@ void Controller::removeWave(const QByteArray &id, bool deleteObject)
 		wave->deleteLater();
 }
 
-void Controller::clearWaves(bool deleteObjects)
+void ControllerPrivate::clearWaves(bool deleteObjects)
 {
 	foreach (QByteArray id, this->m_allWaves.keys())
 		this->removeWave(id, deleteObjects);
 }
 
-void Controller::on_conn_socketConnected()
+void ControllerPrivate::_q_conn_socketConnected()
 {
+	P_Q(Controller);
 	qDebug("Controller: Logging into message broker...");
 	this->m_state = Controller::ClientConnected;
-	emit stateChanged(Controller::ClientConnected);
+	emit q->stateChanged(Controller::ClientConnected);
 	this->conn->login(this->m_stompUsername, this->m_stompPassword);
 }
 
-void Controller::on_conn_socketDisconnected()
+void ControllerPrivate::_q_conn_socketDisconnected()
 {
+	P_Q(Controller);
 	qDebug("Controller: Disconnected...");
 	this->pingTimer->stop();
 	this->m_state = Controller::ClientDisconnected;
 	this->clearWaves(true);
-	emit stateChanged(Controller::ClientDisconnected);
+	emit q->stateChanged(Controller::ClientDisconnected);
 }
 
-void Controller::on_conn_frameReceived()
+void ControllerPrivate::_q_conn_frameReceived()
 {
+	P_Q(Controller);
 	foreach (QStompResponseFrame frame, this->conn->fetchAllFrames()) {
 		if (this->m_state == Controller::ClientConnected) {
 			if (frame.type() == QStompResponseFrame::ResponseConnected) {
@@ -184,7 +200,7 @@ void Controller::on_conn_frameReceived()
 					QString type = msg["type"].toString();
 					if (type == "ERROR") {
 						QVariantMap prop = msg["property"].toMap();
-						emit errorOccurred("login", prop["tag"].toString(), prop["desc"].toString());
+						emit q->errorOccurred("login", prop["tag"].toString(), prop["desc"].toString());
 						continue;
 					}
 					if (type != "LOGIN") {
@@ -200,7 +216,7 @@ void Controller::on_conn_frameReceived()
 						this->pingTimer->start();
 						this->m_state = Controller::ClientOnline;
 						qDebug("Controller: Online! Keys: %s/rx %s/tx", this->m_waveAccessKeyRx.constData(), this->m_waveAccessKeyTx.constData());
-						emit stateChanged(Controller::ClientOnline);
+						emit q->stateChanged(Controller::ClientOnline);
 
 						this->sendJson("manager", "WAVE_LIST");
 					}
@@ -241,56 +257,62 @@ void Controller::on_conn_frameReceived()
 	}
 }
 
-void Controller::on_conn_socketStateChanged(QAbstractSocket::SocketState state)
+void ControllerPrivate::_q_conn_socketStateChanged(QAbstractSocket::SocketState state)
 {
 	qDebug("Controller: Socket state: %d", state);
 }
 
-Controller::ClientState Controller::state()
+Controller::ClientState Controller::state() const
 {
-	return this->m_state;
+	const P_D(Controller);
+	return d->m_state;
 }
 
-WaveModel * Controller::wave(const QByteArray &id)
+WaveModel * Controller::wave(const QByteArray &id) const
 {
-	if (this->m_allWaves.contains(id))
-		return this->m_allWaves[id];
+	const P_D(Controller);
+	if (d->m_allWaves.contains(id))
+		return d->m_allWaves[id];
 	else
 		return NULL;
 }
 
-Wavelet * Controller::wavelet(const QByteArray &id)
+Wavelet * Controller::wavelet(const QByteArray &id) const
 {
-	if (this->m_allWavelets.contains(id))
-		return this->m_allWavelets[id];
+	const P_D(Controller);
+	if (d->m_allWavelets.contains(id))
+		return d->m_allWavelets[id];
 	else
 		return NULL;
 }
 
-Participant * Controller::participant(const QByteArray &id)
+Participant * Controller::participant(const QByteArray &id) const
 {
-	if (this->m_allParticipants.contains(id))
-		return this->m_allParticipants[id];
+	const P_D(Controller);
+	if (d->m_allParticipants.contains(id))
+		return d->m_allParticipants[id];
 	else
 		return NULL;
 }
 
 void Controller::openWavelet(const QByteArray &waveletId)
 {
-	this->subscribeWavelet(waveletId);
+	P_D(Controller);
+	d->subscribeWavelet(waveletId);
 }
 
 void Controller::closeWavelet(const QByteArray &waveletId)
 {
-	this->unsubscribeWavelet(waveletId);
+	P_D(Controller);
+	d->unsubscribeWavelet(waveletId);
 }
 
-void Controller::on_pingTimer_timeout()
+void ControllerPrivate::_q_pingTimer_timeout()
 {
 	this->sendJson("manager", "PING", QString::number(this->timestamp()));
 }
 
-quint64 Controller::timestamp()
+quint64 ControllerPrivate::timestamp()
 {
 	QDateTime now = QDateTime::currentDateTime().toUTC();
 	quint64 ts = now.toTime_t() * 1000llu;
@@ -298,7 +320,7 @@ quint64 Controller::timestamp()
 	return ts;
 }
 
-void Controller::sendJson(const QByteArray & dest, const QString &type, const QVariant &property)
+void ControllerPrivate::sendJson(const QByteArray & dest, const QString &type, const QVariant &property)
 {
 	if (this->m_waveAccessKeyTx.isEmpty()) return;
 	QVariantMap obj;
@@ -319,7 +341,7 @@ void Controller::sendJson(const QByteArray & dest, const QString &type, const QV
 	}
 }
 
-void Controller::subscribeWavelet(const QByteArray &id, bool open)
+void ControllerPrivate::subscribeWavelet(const QByteArray &id, bool open)
 {
 	this->conn->subscribe(
 			this->m_waveAccessKeyRx + "." + id + ".waveop",
@@ -334,7 +356,7 @@ void Controller::subscribeWavelet(const QByteArray &id, bool open)
 		this->sendJson(id, "WAVELET_OPEN", QVariant());
 }
 
-void Controller::unsubscribeWavelet(const QByteArray &id, bool close)
+void ControllerPrivate::unsubscribeWavelet(const QByteArray &id, bool close)
 {
 	if (close)
 		this->sendJson(id, "WAVELET_CLOSE", QVariant());
@@ -349,11 +371,12 @@ void Controller::unsubscribeWavelet(const QByteArray &id, bool close)
 
 void Controller::addParticipant(const QByteArray &waveletId, const QByteArray &id)
 {
-	if (!this->m_allWavelets.contains(waveletId))
+	P_D(Controller);
+	if (!d->m_allWavelets.contains(waveletId))
 		return;
-	this->mcached[waveletId]->waveletAddParticipant(id);
-	this->collateParticipants(id);
-	this->m_allWavelets[waveletId]->addParticipant(this->m_allParticipants[id]);
+	d->mcached[waveletId]->waveletAddParticipant(id);
+	d->collateParticipants(id);
+	d->m_allWavelets[waveletId]->addParticipant(d->m_allParticipants[id]);
 }
 
 void Controller::createNewWave(const QString &title)
@@ -363,21 +386,23 @@ void Controller::createNewWave(const QString &title)
 
 void Controller::createNewWavelet(const QByteArray &waveId, const QString &title)
 {
+	P_D(Controller);
 	QVariantMap prop;
 	prop["waveId"] = QString::fromAscii(waveId);
 	prop["title"] = title;
-	this->sendJson("manager", "WAVELET_CREATE", prop);
+	d->sendJson("manager", "WAVELET_CREATE", prop);
 }
 
 void Controller::leaveWavelet(const QByteArray &waveletId)
 {
-	if (!this->m_allWavelets.contains(waveletId))
+	P_D(Controller);
+	if (!d->m_allWavelets.contains(waveletId))
 		return;
-	this->mcached[waveletId]->waveletRemoveParticipant(this->m_viewerId);
-	this->m_allWavelets[waveletId]->removeParticipant(this->m_viewerId);
+	d->mcached[waveletId]->waveletRemoveParticipant(d->m_viewerId);
+	d->m_allWavelets[waveletId]->removeParticipant(d->m_viewerId);
 }
 
-Wavelet * Controller::newWaveletByDict(WaveModel * wave, const QByteArray &waveletId, const QVariantMap &waveletDict)
+Wavelet * ControllerPrivate::newWaveletByDict(WaveModel * wave, const QByteArray &waveletId, const QVariantMap &waveletDict)
 {
 	QList<QByteArray> participants;
 	foreach (QVariant part_id, waveletDict["participants"].toList())
@@ -402,7 +427,7 @@ Wavelet * Controller::newWaveletByDict(WaveModel * wave, const QByteArray &wavel
 	return wavelet;
 }
 
-void Controller::updateWaveletByDict(Wavelet * wavelet, const QVariantMap &waveletDict)
+void ControllerPrivate::updateWaveletByDict(Wavelet * wavelet, const QVariantMap &waveletDict)
 {
 	QSet<QByteArray> participants;
 	foreach (QVariant part_id, waveletDict["participants"].toList())
@@ -423,7 +448,7 @@ void Controller::updateWaveletByDict(Wavelet * wavelet, const QVariantMap &wavel
 		wavelet->removeParticipant(id);
 }
 
-void Controller::collateParticipants(const QList<QByteArray> & participants)
+void ControllerPrivate::collateParticipants(const QList<QByteArray> & participants)
 {
 	QList<QByteArray> todo;
 	foreach (QByteArray id, participants) {
@@ -441,7 +466,7 @@ void Controller::collateParticipants(const QList<QByteArray> & participants)
 	}
 }
 
-void Controller::collateParticipants(const QByteArray & id)
+void ControllerPrivate::collateParticipants(const QByteArray & id)
 {
 	if (!this->m_allParticipants.contains(id)) {
 		this->m_allParticipants[id] = new Participant(id);
@@ -449,11 +474,12 @@ void Controller::collateParticipants(const QByteArray & id)
 	}
 }
 
-void Controller::processMessage(const QByteArray &waveletId, const QString &type, const QVariant &property)
+void ControllerPrivate::processMessage(const QByteArray &waveletId, const QString &type, const QVariant &property)
 {
+	P_Q(Controller);
 	if (type == "ERROR") {
 		QVariantMap propertyMap = property.toMap();
-		emit errorOccurred(waveletId, propertyMap["tag"].toString(), propertyMap["desc"].toString());
+		emit q->errorOccurred(waveletId, propertyMap["tag"].toString(), propertyMap["desc"].toString());
 		return;
 	}
 	// Manager messages
@@ -520,10 +546,10 @@ void Controller::processMessage(const QByteArray &waveletId, const QString &type
 				foreach (QVariant id, propertyMap["data"].toList())
 					ids.append(id.toByteArray());
 				this->collateParticipants(ids);
-				emit participantSearchResults(this->m_lastSearchId, ids);
+				emit q->participantSearchResults(this->m_lastSearchId, ids);
 			}
 			else if (propertyMap["result"].toString() == "TOO_SHORT")
-				emit participantSearchResultsInvalid(this->m_lastSearchId, propertyMap["data"].toInt());
+				emit q->participantSearchResultsInvalid(this->m_lastSearchId, propertyMap["data"].toInt());
 		}
 		else if (type == "WAVELET_ADD_PARTICIPANT") {
 			QVariantMap propertyMap = property.toMap();
@@ -574,7 +600,7 @@ void Controller::processMessage(const QByteArray &waveletId, const QString &type
 			QVariantMap waveletMap = propertyMap["wavelet"].toMap();
 			QByteArray rootBlipId = waveletMap["rootBlipId"].toByteArray();
 			wavelet->loadBlipsFromSnapshot(blips, rootBlipId, this->m_allParticipants);
-			emit waveletOpened(wavelet->id(), wavelet->isRoot());
+			emit q->waveletOpened(wavelet->id(), wavelet->isRoot());
 		}
 		else if (type == "OPERATION_MESSAGE_BUNDLE") {
 			QVariantMap propertyMap = property.toMap();
@@ -591,61 +617,68 @@ void Controller::processMessage(const QByteArray &waveletId, const QString &type
 
 void Controller::textInserted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &content)
 {
-	Q_ASSERT(this->m_allWavelets.contains(waveletId));
-	Wavelet * w = this->m_allWavelets[waveletId];
+	P_D(Controller);
+	Q_ASSERT(d->m_allWavelets.contains(waveletId));
+	Wavelet * w = d->m_allWavelets[waveletId];
 	Blip * b = w->blipById(blipId); Q_ASSERT(b);
-	this->mcached[waveletId]->documentInsert(blipId, index, QString(content).replace("\n","\\n"));
+	d->mcached[waveletId]->documentInsert(blipId, index, QString(content).replace("\n","\\n"));
 	b->insertText(index, content, true);
 }
 
 void Controller::textDeleted(const QByteArray &waveletId, const QByteArray &blipId, int start, int end)
 {
-	Q_ASSERT(this->m_allWavelets.contains(waveletId));
-	Wavelet * w = this->m_allWavelets[waveletId];
+	P_D(Controller);
+	Q_ASSERT(d->m_allWavelets.contains(waveletId));
+	Wavelet * w = d->m_allWavelets[waveletId];
 	Blip * b = w->blipById(blipId); Q_ASSERT(b);
-	this->mcached[waveletId]->documentDelete(blipId, start, end);
+	d->mcached[waveletId]->documentDelete(blipId, start, end);
 	b->deleteText(start, end-start, true);
 }
 
 void Controller::elementDelete(const QByteArray &waveletId, const QByteArray &blipId, int index)
 {
-	Q_ASSERT(this->m_allWavelets.contains(waveletId));
-	Wavelet * w = this->m_allWavelets[waveletId];
+	P_D(Controller);
+	Q_ASSERT(d->m_allWavelets.contains(waveletId));
+	Wavelet * w = d->m_allWavelets[waveletId];
 	Blip * b = w->blipById(blipId); Q_ASSERT(b);
-	this->mcached[waveletId]->documentElementDelete(blipId, index);
+	d->mcached[waveletId]->documentElementDelete(blipId, index);
 	b->deleteElement(index, true);
 }
 
 void Controller::elementDeltaSubmitted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QVariantMap &delta)
 {
-	Q_ASSERT(this->m_allWavelets.contains(waveletId));
-	Wavelet * w = this->m_allWavelets[waveletId];
+	P_D(Controller);
+	Q_ASSERT(d->m_allWavelets.contains(waveletId));
+	Wavelet * w = d->m_allWavelets[waveletId];
 	Blip * b = w->blipById(blipId); Q_ASSERT(b);
-	this->mcached[waveletId]->documentElementDelta(blipId, index, delta);
+	d->mcached[waveletId]->documentElementDelta(blipId, index, delta);
 	b->applyElementDelta(index, delta);
 }
 
 void Controller::elementSetUserpref(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &key, const QString &value)
 {
-	Q_ASSERT(this->m_allWavelets.contains(waveletId));
-	Wavelet * w = this->m_allWavelets[waveletId];
+	P_D(Controller);
+	Q_ASSERT(d->m_allWavelets.contains(waveletId));
+	Wavelet * w = d->m_allWavelets[waveletId];
 	Blip * b = w->blipById(blipId); Q_ASSERT(b);
-	this->mcached[waveletId]->documentElementSetpref(blipId, index, key, value);
+	d->mcached[waveletId]->documentElementSetpref(blipId, index, key, value);
 	b->setElementUserpref(index, key, value, true);
 }
 
-void Controller::mcached_afterOperationsInserted(int /*start*/, int /*end*/)
+void ControllerPrivate::_q_mcached_afterOperationsInserted(int /*start*/, int /*end*/)
 {
-	OpManager * mcached = qobject_cast<OpManager*>(this->sender());
+	P_Q(Controller);
+	OpManager * mcached = qobject_cast<OpManager*>(q->sender());
 	Q_ASSERT(mcached);
 	QByteArray waveletId = mcached->waveletId();
 	if (!this->hasPendingOperations(waveletId))
 		this->transferOperations(waveletId);
 }
 
-void Controller::wavelet_participantsChanged()
+void ControllerPrivate::_q_wavelet_participantsChanged()
 {
-	Wavelet * wavelet = qobject_cast<Wavelet*>(this->sender());
+	P_Q(Controller);
+	Wavelet * wavelet = qobject_cast<Wavelet*>(q->sender());
 	Q_ASSERT(wavelet);
 	if (!wavelet->participant(this->m_viewerId)) { // I got kicked
 		WaveModel * wave = wavelet->waveModel();
@@ -659,13 +692,13 @@ void Controller::wavelet_participantsChanged()
 	}
 }
 
-bool Controller::hasPendingOperations(const QByteArray &waveletId)
+bool ControllerPrivate::hasPendingOperations(const QByteArray &waveletId)
 {
 	Q_ASSERT(this->ispending.contains(waveletId));
 	return this->ispending[waveletId] || !this->mpending[waveletId]->isEmpty();
 }
 
-void Controller::transferOperations(const QByteArray &waveletId)
+void ControllerPrivate::transferOperations(const QByteArray &waveletId)
 {
 	Q_ASSERT(this->mpending.contains(waveletId));
 	OpManager * mp = this->mpending[waveletId];
@@ -690,22 +723,23 @@ void Controller::transferOperations(const QByteArray &waveletId)
 
 int Controller::searchForParticipant(const QString &text)
 {
-	this->sendJson("manager", "PARTICIPANT_SEARCH", text);
-	return ++this->m_lastSearchId;
+	P_D(Controller);
+	d->sendJson("manager", "PARTICIPANT_SEARCH", text);
+	return ++d->m_lastSearchId;
 }
 
-void Controller::on_pendingTimer_timeout()
+void ControllerPrivate::_q_pendingTimer_timeout()
 {
 	//TODO
 }
 
-void Controller::queueMessageBundle(Wavelet * wavelet, const QVariant &serial_ops, int version, const QVariantMap &blipsums)
+void ControllerPrivate::queueMessageBundle(Wavelet * wavelet, const QVariant &serial_ops, int version, const QVariantMap &blipsums)
 {
 	//TODO
 	this->processMessageBundle(wavelet, serial_ops, version, blipsums);
 }
 
-void Controller::processMessageBundle(Wavelet * wavelet, const QVariant &serial_ops, int version, const QVariantMap &blipsums)
+void ControllerPrivate::processMessageBundle(Wavelet * wavelet, const QVariant &serial_ops, int version, const QVariantMap &blipsums)
 {
 	OpManager * mpending = this->mpending[wavelet->id()];
 	OpManager * mcached = this->mcached[wavelet->id()];
@@ -762,3 +796,6 @@ void Controller::processMessageBundle(Wavelet * wavelet, const QVariant &serial_
 		}
 	}
 }
+
+
+ControllerPrivate::ControllerPrivate(Controller * q) : pq_ptr(q) {}
