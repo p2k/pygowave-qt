@@ -1,0 +1,25 @@
+Installing PyGoWaveDesktopClient
+--------------------------------
+
+PyGoWaveDesktopClient requires Qt 4.5 or greater.
+
+The project folder contains three subprojects:
+PyGoWaveApi, JSWrapper and the PyGoWaveDesktopClient itself.
+
+First, make sure you have QStomp and QJson compiled and installed.
+
+Before compiling the PyGoWaveDesktopClient, the two libraries
+PyGoWaveApi and JSWrapper must be compiled and installed.
+
+Open a Shell, change into each directory and run the following commands:
+
+  qmake -config release
+  make install
+
+The last command may need root privileges on POSIX operating systems.
+
+After the two libraries are done. Change into the root project folder
+and run the same commands.
+
+Please report problems to:
+  http://github.com/p2k/pygowave-qt/issues

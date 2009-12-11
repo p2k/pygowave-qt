@@ -1,0 +1,667 @@
+
+/* This stylesheet is shamelessly ripped of the Google Wave screenshots. Thanks, GIMP! */
+
+.wavelet_widget
+{
+	border: 1px solid black;
+	width: 100%;
+	height: 100%;
+}
+
+.wavelet_toolbar
+{
+	background: #E5ECF9 url(qrc:/gui/gfx/ui-bg_glass_100_E5ECF9_1x400.png) repeat-x scroll 50% 50%;
+	border-bottom: 1px solid #B8C6D9;
+	height: 22px;
+	width: 100%;
+	padding: 2px 0;
+	margin: 0;
+}
+
+.wavelet_toolbar .separator
+{
+	float: left;
+	width: 5px;
+	height: 22px;
+	background-image: url(qrc:/gui/gfx/separator.png);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.wavelet_toolbar .toolbar_button
+{
+	float: left;
+	height: 16px;
+	padding: 3px;
+	margin-left: 2px;
+	cursor: pointer;
+}
+
+.wavelet_toolbar .toolbar_button .toolbar_text
+{
+	float: left;
+	padding-left: 4px;
+	padding-right: 1px;
+	line-height: 16px;
+	font-size: 0.9em;
+}
+
+.wavelet_toolbar .toolbar_button:hover
+{
+	background: #E5ECF9 url(qrc:/gui/gfx/ui-bg_glass_100_cadef4_1x400.png) repeat-x scroll 50% 50%;
+	border: 1px solid #B8C6D9;
+	padding: 2px;
+}
+
+.wavelet_toolbar .toolbar_button:active
+{
+	background: #E5ECF9 url(qrc:/gui/gfx/ui-bg_glass_65_C3D9FF_1x400.png) repeat-x scroll 50% 50%;
+	border: 1px solid #B8C6D9;
+	padding: 3px 1px 1px 3px;
+}
+
+.wavelet_toolbar .toolbar_button.disabled
+{
+	cursor: default;
+}
+
+.wavelet_toolbar .toolbar_button.disabled .toolbar_text
+{
+	color: #BBBBBB;
+}
+
+.wavelet_toolbar .toolbar_button.disabled:hover
+{
+	background: transparent;
+	border: none;
+	padding: 3px;
+}
+
+.wavelet_toolbar .toolbar_button.disabled:active
+{
+	background: transparent;
+	border: none;
+	padding: 3px;
+}
+
+.wavelet_toolbar .toolbar_button .wavelet_toolbar_add_gadget
+{
+	float: left;
+	height: 16px;
+	width: 16px;
+	background-image: url(qrc:/gui/gfx/blip_editor_toolbarbuttons.png);
+	background-repeat: no-repeat;
+}
+
+.wavelet_toolbar .toolbar_button .wavelet_toolbar_reply
+{
+	float: left;
+	height: 16px;
+	width: 16px;
+	background-image: url(qrc:/gui/gfx/reply-all.png);
+	background-repeat: no-repeat;
+}
+
+.wavelet_participants_div
+{
+	height: 56px;
+	width: 100%;
+	background-color: rgb(201, 226, 252);
+	border-bottom: 1px solid #b8c6d9;
+}
+
+.wavelet_participant
+{
+	float: left;
+	width: 47px;
+	height: 44px;
+	margin-top: 7px;
+	padding: 0;
+}
+
+.wavelet_participant:first-child
+{
+	margin-left: 5px;
+}
+
+.wavelet_participant .thumbnail
+{
+	height: 40px;
+	width: 40px;
+	border: 1px solid #b8c6d9;
+	background-color: #ffffff;
+}
+
+.wavelet_participant .indicator
+{
+	position: relative;
+	top: -9px;
+	left: 34px;
+	width: 11px;
+	height: 11px;
+	background-image: url(qrc:/gui/gfx/user-online.png);
+}
+
+.wavelet_participant .indicator.online
+{
+	display: block;
+}
+
+.wavelet_participant .indicator.offline
+{
+	display: none;
+}
+
+.wavelet_participant.small
+{
+	margin-top: 0;
+	width: 32px;
+	height: 30px;
+}
+
+.wavelet_participant.small:first-child
+{
+	margin-left: 0;
+}
+
+.wavelet_participant.small .thumbnail
+{
+	height: 27px;
+	width: 27px;
+}
+
+.wavelet_participant.small .indicator
+{
+	top: -6px;
+	left: 23px;
+	width: 8px;
+	height: 8px;
+	background-image: url(qrc:/gui/gfx/user-online-small.png);
+}
+
+.wavelet_participant.searchbox
+{
+	float: none;
+	width: 100%;
+	height: 35px;
+	margin: 0;
+	cursor: pointer;
+}
+
+.wavelet_participant.searchbox .thumbnail
+{
+	float: left;
+	margin: 3px 5px;
+	height: 27px;
+	width: 27px;
+}
+
+.wavelet_participant.searchbox .indicator
+{
+	top: 26px;
+	left: 28px;
+	width: 8px;
+	height: 8px;
+	background-image: url(qrc:/gui/gfx/user-online-small.png);
+}
+
+.wavelet_participant.searchbox .nicktext
+{
+	float: left;
+	font-size: 1.2em;
+	margin-top: 7px;
+}
+
+.wavelet_participant.searchbox.selected
+{
+	background-color: #e0e8a4;
+}
+
+.wavelet_add_participant_widget
+{
+	background-image: url(qrc:/gui/gfx/list-add.png);
+	width: 22px;
+	height: 22px;
+	cursor: pointer;
+	float: left;
+	margin-top: 17px;
+	margin-left: 8px;
+}
+
+.wavelet_add_participant_searchbar
+{
+	background-color: rgb(201, 226, 252);
+	height: 24px;
+	padding: 4px 8px 4px 4px;
+	border-bottom: 1px solid #b8c6d9;
+}
+
+.wavelet_add_participant_results
+{
+	height: 100%;
+	overflow: auto;
+}
+
+.wavelet_add_participant_results .results_invalid
+{
+	margin-left: 5px;
+	margin-top: 5px;
+	font-size: 1.2em;
+}
+
+.wavelet_status_bar
+{
+	width: 100%;
+	height: 16px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	border-top: 1px solid #B8C6D9;
+	background-color: #DDDDDD;
+}
+
+.wavelet_status_bar .message
+{
+	float: left;
+	padding-left: 4px;
+	font-size: 0.9em;
+}
+
+.wavelet_status_bar .document
+{
+	height: 16px;
+	width: 16px;
+	float: right;
+	padding-right: 2px;
+	background-repeat: no-repeat;
+	background-image: url(qrc:/gui/gfx/document_status.png);
+}
+
+.wavelet_status_bar .document.clean
+{
+	background-position: 0 0;
+}
+.wavelet_status_bar .document.dirty
+{
+	background-position: 0 -16px;
+}
+.wavelet_status_bar .document.invalid
+{
+	background-position: 0 -32px;
+}
+
+.blip_container_widget
+{
+	width: 100%;
+	height: auto;
+	overflow: auto;
+	padding: 0;
+	background-color: #FFFFFF;
+}
+
+.blip_container_widget > .blip_container_widget
+{
+	margin-left: 25px;
+	border-left: 1px dotted #CCCCCC;
+}
+
+.blip_editor_widget
+{
+	width: 100%;
+	height: auto;
+	min-height: 35px;
+	cursor: text;
+	overflow: visible;
+	font-size: 1.1em;
+	outline: none;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	position: relative;
+	margin-top: 4px;
+	border-bottom: 1px dotted #CCCCCC;
+}
+
+.blip_editor_widget p
+{
+	line-height: normal !important;
+	margin-left: 5px;
+	margin-bottom: 0;
+	margin-bottom: 2px;
+	padding: 0;
+}
+
+.blip_editor_widget .gadget_element
+{
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+	padding: 5px;
+	border-top: 1px dotted #CCCCCC;
+	border-left: 1px dotted #CCCCCC;
+	position: relative;
+}
+
+.blip_editor_widget .gadget_element iframe
+{
+	width: 100%;
+	height: 300px;
+	border: 0;
+}
+
+.blip_editor_widget .gadget_element .delete_box
+{
+	width: 16px;
+	height: 16px;
+	background-image: url(qrc:/gui/gfx/delete_gadget.png);
+	background-repeat: no-repeat;
+	position: absolute;
+	right: 0;
+	top: 2px;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.blip_editor_widget .gadget_element .delete_box_opera
+{
+	width: 16px;
+	height: 16px;
+	background-image: url(qrc:/gui/gfx/delete_gadget.png);
+	background-repeat: no-repeat;
+	float:right;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.blip_editor_control.blip_infobox
+{
+	position: absolute;
+	text-align: right;
+	right: 3px;
+	height: 16px;
+	width: 90px;
+}
+
+.blip_editor_control .blip_dropdown
+{
+	float: right;
+	height: 16px;
+	width: 16px;
+	background-repeat: no-repeat;
+	background-image: url(qrc:/gui/icons/document-edit.png);
+	cursor: pointer;
+	margin-left: 3px;
+}
+
+.blip_editor_control.blip_edit_controls
+{
+	width: 100%;
+	height: 30px;
+	padding-top: 5px;
+}
+
+.blip_editor_control .blip_draft_check
+{
+	float: right;
+	margin-right: 6px;
+	padding-top: 4px;
+}
+
+.blip_editor_control .blip_draft_check .box
+{
+	float: left;
+	height: 14px;
+	width: 14px;
+	border: 1px solid #93B4D9;
+	margin-right: 2px;
+	cursor: pointer;
+	background-color: #F5F5F5;
+	background-image: url(qrc:/gui/gfx/checkbox_bg.png);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.blip_editor_control .blip_draft_check .box.checked
+{
+	background-image: url(qrc:/gui/gfx/checkbox_checked.png);
+}
+
+.blip_editor_control.blip_contributors
+{
+	float: left;
+	margin-left: 6px;
+	margin-right: 3px;
+	margin-top: 1px;
+}
+
+.blip_editor_control.blip_contributors > *
+{
+	float: left;
+}
+
+.blip_editor_control.blip_contributor_names
+{
+	float: left;
+	color: #BBBBBB;
+	font-weight: bold;
+	font-size: 0.9em;
+	margin-right: 3px;
+}
+
+.blip_editor_control.blip_contributor_names.for_root_blip
+{
+	margin-left: 5px;
+	float: none;
+	margin-bottom: 4px;
+}
+
+.search_widget
+{
+	height: 24px;
+	display: table;
+	table-layout: fixed;
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 100%;
+}
+
+.search_widget .input_wrapper
+{
+	display: table-cell;
+	vertical-align: top;
+}
+.search_widget input
+{
+	border: none;
+	background-repeat: repeat-x;
+	height: 20px;
+	padding-top: 4px;
+	padding-bottom: 0;
+	padding-right: 0;
+	padding-left: 0;
+	width: 100%;
+	vertical-align: top;
+	outline: none;
+	margin: 0;
+}
+.search_widget input.active 
+{
+	background-image: url(qrc:/gui/gfx/searchbox_active_c.gif);
+}
+.search_widget input.inactive
+{
+	background-image: url(qrc:/gui/gfx/searchbox_inactive_c.gif);
+}
+
+.search_widget .left_corner
+{
+	display: table-cell;
+	width: 12px;
+	height: 24px;
+}
+.search_widget .left_corner.active
+{
+	background-image: url(qrc:/gui/gfx/searchbox_active_l.gif);
+}
+.search_widget .left_corner.inactive
+{
+	background-image: url(qrc:/gui/gfx/searchbox_inactive_l.gif);
+}
+
+.search_widget .right_corner
+{
+	display: table-cell;
+	width: 21px;
+	height: 24px;
+}
+.search_widget .right_corner.active
+{
+	background-image: url(qrc:/gui/gfx/searchbox_active_r.gif);
+}
+.search_widget .right_corner.inactive
+{
+	background-image: url(qrc:/gui/gfx/searchbox_inactive_r.gif);
+}
+
+.debug_window
+{
+	display: table;
+	width: 100%;
+	height: 100%;
+}
+
+.debug_window_row
+{
+	display: table-row;
+}
+
+.debug_window_bar
+{
+	display: table-cell;
+	background-color: rgb(201, 226, 252);
+	border-bottom: 1px solid #b8c6d9;
+	width: 100%;
+	height: 20px;
+	padding: 4px;
+}
+
+.debug_window_table_container
+{
+	display: table-cell;
+	width: 100%;
+	height: auto;
+}
+
+.debug_window_table
+{
+	width: 100%;
+	height: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+	border-style: hidden;
+	border-width: 1px;
+}
+
+.debug_window_table td
+{
+	border: 1px solid gray;
+	height: 15px;
+}
+
+.debug_window_table .col1
+{
+	width: 35%;
+	height: 100%;
+}
+
+.debug_window_table .col2
+{
+	width: 20%;
+	height: 100%;
+}
+
+.debug_window_table .col3
+{
+	width: 5%;
+	height: 100%;
+}
+
+.debug_window_table .col4
+{
+	width: 40%;
+	height: 100%;
+}
+
+.error_overlay
+{
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+.error_overlay .bg_div
+{
+	background: url(qrc:/gui/gfx/error-bg.png) repeat scroll 50% 50%;
+	height: 100%;
+	clear: both;
+}
+
+.error_overlay .msg_div
+{
+	background-color: #CCCCCC;
+	width: 100%;
+	height: 31px;
+	background-image: url(qrc:/gui/gfx/generic_error.png);
+	background-repeat: no-repeat;
+	background-position: 4px 4px;
+	overflow: hidden;
+}
+
+.error_overlay .msg
+{
+	float: left;
+	padding-left: 31px;
+	padding-top: 7px;
+	padding-bottom: 7px;
+	font-size: 0.9em;
+}
+
+.error_overlay button
+{
+	margin-top: 3px;
+	margin-bottom: 0px;
+	position: absolute;
+	right: 0;
+}
+
+.wavelet_add_gadget .description
+{
+	font-size: 0.8em;
+}
+
+.wavelet_add_gadget .select_div
+{
+	padding-top: 10px;
+	padding-bottom: 10px;
+	height: 26px;
+}
+
+.wavelet_add_gadget select
+{
+	float: left;
+	width: 260px;
+}
+
+.wavelet_add_gadget .refresh_button
+{
+	float: left;
+	height: 16px;
+	width: 16px;
+	padding: 2px;
+	margin-top: 4px;
+	margin-left: 6px;
+	background: url(qrc:/gui/gfx/view-refresh.png) no-repeat;
+	cursor: pointer;
+}

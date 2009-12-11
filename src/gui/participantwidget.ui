@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ParticipantWidget</class>
+ <widget class="QWidget" name="ParticipantWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>47</width>
+    <height>44</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>47</width>
+    <height>44</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>47</width>
+    <height>44</height>
+   </size>
+  </property>
+  <property name="styleSheet">
+   <string>QLabel#avatar {
+	border: 1px solid #b8c6d9;
+	background-color: #ffffff;
+}</string>
+  </property>
+  <widget class="QLabel" name="avatar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>42</width>
+     <height>42</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="../main.qrc">:/gui/gfx/default-avatar.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="indicator">
+   <property name="geometry">
+    <rect>
+     <x>34</x>
+     <y>33</y>
+     <width>11</width>
+     <height>11</height>
+    </rect>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="../main.qrc">:/gui/icons/user-online.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../main.qrc"/>
+ </resources>
+ <connections/>
+</ui>

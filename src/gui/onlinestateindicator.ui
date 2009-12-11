@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>OnlineStateIndicator</class>
+ <widget class="QWidget" name="OnlineStateIndicator">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>16</width>
+    <height>16</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QLabel" name="icon">
+     <property name="pixmap">
+      <pixmap resource="../main.qrc">:/gui/icons/im-user-offline.png</pixmap>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <action name="actOnline">
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/user-online.png</normaloff>:/gui/icons/user-online.png</iconset>
+   </property>
+   <property name="text">
+    <string>Online</string>
+   </property>
+  </action>
+  <action name="actAway">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/user-away.png</normaloff>:/gui/icons/user-away.png</iconset>
+   </property>
+   <property name="text">
+    <string>Away</string>
+   </property>
+  </action>
+  <action name="actBusy">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/user-busy.png</normaloff>:/gui/icons/user-busy.png</iconset>
+   </property>
+   <property name="text">
+    <string>Busy</string>
+   </property>
+  </action>
+  <action name="actInvisible">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/user-invisible.png</normaloff>:/gui/icons/user-invisible.png</iconset>
+   </property>
+   <property name="text">
+    <string>Invisible</string>
+   </property>
+  </action>
+  <action name="actOffline">
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/user-offline.png</normaloff>:/gui/icons/user-offline.png</iconset>
+   </property>
+   <property name="text">
+    <string>Offline</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../main.qrc"/>
+ </resources>
+ <connections/>
+</ui>

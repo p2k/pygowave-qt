@@ -1,0 +1,75 @@
+
+html
+{
+	height: 100%;
+}
+
+body
+{
+	font-family: Arial, sans-serif;
+	margin: 0;
+}
+
+p, h1
+{
+	margin: 0;
+}
+
+th
+{
+	text-align: left;
+}
+
+h1
+{
+	font-size: 1.3em;
+	border-bottom: 0 none;
+	margin-left: 0;
+	padding: 0;
+}
+
+h4
+{
+	background-color: #cadef4;
+	border-top: 1px solid #93b4d9;
+	margin: 4px 4px 0;
+	padding: 2px;
+	font-size: small;
+}
+
+a img
+{
+	border: 0;
+}
+
+a 
+{
+	color: #006EBA;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+a:hover 
+{
+	text-decoration: underline;
+}
+
+p
+{
+	padding: 0 0 1em;
+}
+
+.mochaButton
+{
+	background: #E5ECF9 url(qrc:/gui/gfx/wavelet-toolbar-bg.png) repeat-x scroll 50% 50%;
+	font-size: 0.9em;
+	border: 1px solid #93B4D9;
+	cursor: pointer;
+	float: right;
+	line-height: 1.4em;
+	margin: 0 0.4em 0.5em 0;
+	overflow: visible;
+	padding: 0.1em 0.6em;
+	width: auto;
+	font-weight: bold;
+}

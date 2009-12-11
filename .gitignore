@@ -1,6 +1,7 @@
 *.pro.user
 debug/*
 release/*
+build/*
 docs/*
 Makefile
 *.o
