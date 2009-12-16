@@ -5,11 +5,15 @@ QT += network \
     webkit \
     xml
 macx {
-	LIBS += -framework PyGoWaveApi -framework JSWrapper -lqjson
+	LIBS += -framework PyGoWaveApi -framework JSWrapper
+}
+else:win32 {
+	LIBS += -lpygowave_api0 -ljswrapper0
 }
 else {
-	LIBS += -lpygowave_api -ljswrapper -lqjson
+	LIBS += -lpygowave_api -ljswrapper
 }
+LIBS += -lqjson
 TARGET = PyGoWaveDesktopClient
 TEMPLATE = app
 DEPENDPATH += src

@@ -21,11 +21,15 @@
 QT += network
 QT -= gui
 macx {
-	LIBS += -framework QStomp -lqjson
+	LIBS += -framework QStomp
+}
+else:win32 {
+	LIBS += -lqstomp0
 }
 else {
-	LIBS += -lqstomp -lqjson
+	LIBS += -lqstomp
 }
+LIBS += -lqjson
 TARGET = pygowave_api
 TEMPLATE = lib
 DEFINES += PYGOWAVE_API_LIBRARY
