@@ -23,6 +23,7 @@
 
 #include <QtGui/QWidget>
 #include <QtGui/QSystemTrayIcon>
+#include <QtCore/QHash>
 
 class QTimer;
 class QMenu;
@@ -69,10 +70,12 @@ private slots:
 	void on_actBusy_triggered();
 	void on_actAway_triggered();
 	void on_actOnline_triggered();
+	void on_actHide_triggered();
 	void on_blinkTimer_timeout();
 	void on_trayBlinkTimer_timeout();
 
 	void tray_activated(QSystemTrayIcon::ActivationReason reason);
+	void tray_messageClicked();
 
 private:
 	Ui::OnlineStateIndicator * ui;
@@ -83,9 +86,10 @@ private:
 	OnlineState m_state;
 	QSystemTrayIcon * m_tray;
 	QMenu * m_actionsMenu;
-	QPixmap m_currentIcon;
 	bool m_animateTray;
 	bool m_showPopups;
+	QHash<OnlineState, QPixmap> m_indicatorPixmaps;
+	QHash<OnlineState, QIcon> m_trayIcons;
 };
 
 #endif // ONLINESTATEINDICATOR_H

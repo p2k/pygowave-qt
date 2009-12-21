@@ -76,6 +76,11 @@
     <string>Offline</string>
    </property>
   </action>
+  <action name="actHide">
+   <property name="text">
+    <string>Hide</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="../main.qrc"/>

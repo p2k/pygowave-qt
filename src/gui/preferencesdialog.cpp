@@ -31,6 +31,7 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) : QDialog(parent), ui(new 
 	this->ui->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(false);
 	QSettings settings;
 
+	this->ui->rbSDI->setChecked(settings.value("UseTabs", false).toBool());
 	this->ui->chkTray->setChecked(settings.value("Tray", true).toBool());
 	this->ui->chkStartHidden->setChecked(settings.value("StartHidden", false).toBool());
 	this->ui->cmbInitialStatus->setCurrentIndex(settings.value("InitialStatus", 0).toInt());
@@ -61,6 +62,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) : QDialog(parent), ui(new 
 	connect(this->ui->txtPassword, SIGNAL(textChanged(QString)), this, SLOT(somethingChanged()));
 	connect(this->ui->chkAnimateTray, SIGNAL(toggled(bool)), this, SLOT(somethingChanged()));
 	connect(this->ui->chkPopups, SIGNAL(toggled(bool)), this, SLOT(somethingChanged()));
+	connect(this->ui->rbMDI, SIGNAL(toggled(bool)), this, SLOT(somethingChanged()));
+	connect(this->ui->rbSDI, SIGNAL(toggled(bool)), this, SLOT(somethingChanged()));
 }
 
 void PreferencesDialog::somethingChanged()
@@ -88,6 +91,8 @@ void PreferencesDialog::changeEvent(QEvent *e)
 void PreferencesDialog::on_buttonBox_clicked(QAbstractButton* button)
 {
 	if (button == this->ui->buttonBox->button(QDialogButtonBox::RestoreDefaults)) {
+		this->ui->rbMDI->setChecked(true);
+
 		this->ui->chkTray->setChecked(true);
 		this->ui->chkStartHidden->setChecked(false);
 		this->ui->cmbInitialStatus->setCurrentIndex(0);
@@ -104,6 +109,8 @@ void PreferencesDialog::on_buttonBox_clicked(QAbstractButton* button)
 	}
 	if (button == this->ui->buttonBox->button(QDialogButtonBox::Apply) || button == this->ui->buttonBox->button(QDialogButtonBox::Ok)) {
 		QSettings settings;
+
+		settings.setValue("UseTabs", this->ui->rbSDI->isChecked());
 
 		settings.setValue("Tray", this->ui->chkTray->isChecked());
 		settings.setValue("StartHidden", this->ui->chkStartHidden->isChecked());

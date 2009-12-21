@@ -45,14 +45,30 @@ QPixmap AvatarLoader::get(const QString & url)
 {
 	if (this->m_avatarCache.contains(url))
 		return this->m_avatarCache[url];
-	else {
-		QNetworkRequest request;
-		request.setUrl(QUrl(url));
-		request.setRawHeader("User-Agent", "PyGoWaveDesktopClient/0.1");
-		this->mgr->get(request);
-		this->m_avatarCache[url] = QPixmap();
-		return QPixmap();
-	}
+	else
+		this->queueRequest(url);
+	return QPixmap();
+}
+
+void AvatarLoader::queueRequest(const QString &url)
+{
+	if (this->m_requestQueue.contains(url))
+		return;
+	this->m_avatarCache[url] = QPixmap();
+	this->m_requestQueue.append(url);
+	if (this->m_requestQueue.size() == 1)
+		this->doNextRequest();
+}
+
+void AvatarLoader::doNextRequest()
+{
+	if (this->m_requestQueue.isEmpty())
+		return;
+	QString url = this->m_requestQueue.first();
+	QNetworkRequest request;
+	request.setUrl(QUrl(url));
+	request.setRawHeader("User-Agent", "PyGoWaveDesktopClient/0.1");
+	this->mgr->get(request);
 }
 
 QPixmap AvatarLoader::getPrepared(const QString & url, const QSize &size)
@@ -90,7 +106,8 @@ QPixmap AvatarLoader::defaultAvatarPrepared(const QSize &size)
 
 void AvatarLoader::on_mgr_finished(QNetworkReply * reply)
 {
-	QString url = reply->request().url().toString();
+	QString url = this->m_requestQueue.takeFirst();
+	bool success = false;
 	reply->deleteLater();
 	if (reply->error() == QNetworkReply::NoError) {
 		QString dataType = reply->header(QNetworkRequest::ContentTypeHeader).toString();
@@ -99,10 +116,10 @@ void AvatarLoader::on_mgr_finished(QNetworkReply * reply)
 			pix.loadFromData(reply->readAll());
 			if (!pix.isNull()) {
 				this->m_avatarCache[url] = pix;
-				emit avatarReady(url, true);
-				return;
+				success = true;
 			}
 		}
 	}
-	emit avatarReady(url, false);
+	emit avatarReady(url, success);
+	this->doNextRequest();
 }

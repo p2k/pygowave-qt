@@ -7,6 +7,7 @@ html
 body
 {
 	font-family: Arial, sans-serif;
+	font-size: 11pt;
 	margin: 0;
 }
 
@@ -61,7 +62,7 @@ p
 
 .mochaButton
 {
-	background: #E5ECF9 url(qrc:/gui/gfx/wavelet-toolbar-bg.png) repeat-x scroll 50% 50%;
+	background: #E5ECF9 url(wavelet:load?rc=gfx&name=wavelet-toolbar-bg) repeat-x scroll 50% 50%;
 	font-size: 0.9em;
 	border: 1px solid #93B4D9;
 	cursor: pointer;

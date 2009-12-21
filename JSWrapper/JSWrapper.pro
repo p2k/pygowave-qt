@@ -43,7 +43,11 @@ macx {
 	FRAMEWORK_HEADERS.version = Versions
 	FRAMEWORK_HEADERS.files = src/jswrapper.h src/jswrapper_global.h
 	FRAMEWORK_HEADERS.path = Headers
-	QMAKE_BUNDLE_DATA += FRAMEWORK_HEADERS
+	FRAMEWORK_RESOURCES.version = Versions
+	FRAMEWORK_RESOURCES.files = src/jswrapper.js
+	FRAMEWORK_RESOURCES.path = Resources
+	QMAKE_BUNDLE_DATA += FRAMEWORK_HEADERS FRAMEWORK_RESOURCES
 	TARGET = JSWrapper
+	INSTALLS -= dist_headers js_library
 }
 

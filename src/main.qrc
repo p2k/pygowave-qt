@@ -35,7 +35,6 @@
         <file>gui/gfx/delete_gadget.png</file>
         <file>gui/gfx/error-bg.png</file>
         <file>gui/gfx/generic_error.png</file>
-        <file>gui/gfx/view-refresh.png</file>
         <file>gui/js/mootools-1.2-core.js</file>
         <file>gui/js/mootools-1.2-more.js</file>
         <file>gui/js/gadgets.js</file>
@@ -60,5 +59,22 @@
         <file>gui/icons/PyGoWave-32.png</file>
         <file>gui/icons/PyGoWave-48.png</file>
         <file>gui/icons/PyGoWave-256.png</file>
+        <file>gui/gfx/scroll-left.png</file>
+        <file>gui/gfx/scroll-right.png</file>
+        <file>gui/js/gadget-wrapper.js</file>
+        <file>gui/icons/add-gadget.png</file>
+        <file>gui/icons/view-refresh.png</file>
+        <file>gui/icons/tray-away-16.png</file>
+        <file>gui/icons/tray-away-22.png</file>
+        <file>gui/icons/tray-busy-16.png</file>
+        <file>gui/icons/tray-busy-22.png</file>
+        <file>gui/icons/tray-invisible-16.png</file>
+        <file>gui/icons/tray-invisible-22.png</file>
+        <file>gui/icons/tray-offline-16.png</file>
+        <file>gui/icons/tray-offline-22.png</file>
+        <file>gui/icons/tray-online-16.png</file>
+        <file>gui/icons/tray-online-22.png</file>
+        <file>gui/icons/tab-detach.png</file>
+        <file>gui/gfx/dropdown.png</file>
     </qresource>
 </RCC>

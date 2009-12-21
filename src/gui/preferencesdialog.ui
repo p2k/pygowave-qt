@@ -25,6 +25,32 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>Layout</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_10">
+          <item>
+           <widget class="QRadioButton" name="rbMDI">
+            <property name="text">
+             <string>Open Waves in separate Windows</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rbSDI">
+            <property name="text">
+             <string>Open Waves in Tabs</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
           <string>System Tray</string>

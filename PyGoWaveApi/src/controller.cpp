@@ -61,6 +61,7 @@ Controller::Controller(QObject * parent) : QObject(parent), pd_ptr(new Controlle
 	connect(d->conn, SIGNAL(socketDisconnected()), this, SLOT(_q_conn_socketDisconnected()));
 	connect(d->conn, SIGNAL(frameReceived()), this, SLOT(_q_conn_frameReceived()));
 	connect(d->conn, SIGNAL(socketStateChanged(QAbstractSocket::SocketState)), this, SLOT(_q_conn_socketStateChanged(QAbstractSocket::SocketState)));
+	connect(d->conn, SIGNAL(socketError(QAbstractSocket::SocketError)), this, SLOT(_q_conn_socketError(QAbstractSocket::SocketError)));
 	connect(d->pingTimer, SIGNAL(timeout()), this, SLOT(_q_pingTimer_timeout()));
 	connect(d->pendingTimer, SIGNAL(timeout()), this, SLOT(_q_pendingTimer_timeout()));
 }
@@ -98,6 +99,8 @@ void Controller::disconnectFromHost()
 {
 	P_D(Controller);
 	if (d->conn->socketState() == QAbstractSocket::ConnectedState) {
+		foreach (QByteArray id, d->m_openWavelets)
+			d->unsubscribeWavelet(id);
 		d->sendJson("manager", "DISCONNECT", QVariant());
 		d->conn->logout();
 	}
@@ -260,6 +263,18 @@ void ControllerPrivate::_q_conn_frameReceived()
 void ControllerPrivate::_q_conn_socketStateChanged(QAbstractSocket::SocketState state)
 {
 	qDebug("Controller: Socket state: %d", state);
+	if (state == QAbstractSocket::UnconnectedState && this->m_state == Controller::ClientDisconnected)
+		this->_q_conn_socketDisconnected();
+}
+
+void ControllerPrivate::_q_conn_socketError(QAbstractSocket::SocketError err)
+{
+	if (err == QAbstractSocket::RemoteHostClosedError)
+		return;
+	P_Q(Controller);
+	QByteArray errTag = "SOCKET_ERROR_";
+	errTag.append(QByteArray::number((int) err));
+	q->errorOccurred("manager", errTag, this->conn->socketErrorString());
 }
 
 Controller::ClientState Controller::state() const
@@ -377,6 +392,8 @@ void ControllerPrivate::unsubscribeWavelet(const QByteArray &id, bool close)
 			<< QPair<QByteArray,QByteArray>("routing_key", this->m_waveAccessKeyRx + "." + id + ".waveop")
 			<< QPair<QByteArray,QByteArray>("exchange", "wavelet.direct")
 	);
+	if (this->m_openWavelets.contains(id))
+		this->m_openWavelets.remove(id);
 }
 
 void Controller::addParticipant(const QByteArray &waveletId, const QByteArray &id)
@@ -409,6 +426,15 @@ void Controller::leaveWavelet(const QByteArray &waveletId)
 		return;
 	d->mcached[waveletId]->waveletRemoveParticipant(d->m_viewerId);
 	d->m_allWavelets[waveletId]->removeParticipant(d->m_viewerId);
+}
+
+void Controller::refreshGadgetList(bool forced)
+{
+	P_D(Controller);
+	if (d->m_cachedGadgetList.isEmpty() || forced)
+		d->sendJson("manager", "GADGET_LIST");
+	else
+		emit updateGadgetList(d->m_cachedGadgetList);
 }
 
 Wavelet * ControllerPrivate::newWaveletByDict(WaveModel * wave, const QByteArray &waveletId, const QVariantMap &waveletDict)
@@ -595,6 +621,18 @@ void ControllerPrivate::processMessage(const QByteArray &waveletId, const QStrin
 			prop["waveId"] = propertyMap["waveId"];
 			this->sendJson("manager", "WAVELET_LIST", prop); // Reload wave
 		}
+		else if (type == "GADGET_LIST") {
+			QVariantList propertyList = property.toList();
+			this->m_cachedGadgetList.clear();
+			foreach (QVariant var, propertyList) {
+				QVariantMap gadgetInfo = var.toMap();
+				QHash<QString,QString> gadgetInfoClean;
+				foreach (QString entry, gadgetInfo.keys())
+					gadgetInfoClean[entry] = gadgetInfo[entry].toString();
+				this->m_cachedGadgetList.append(gadgetInfoClean);
+			}
+			emit q->updateGadgetList(this->m_cachedGadgetList);
+		}
 		return;
 	}
 
@@ -608,6 +646,7 @@ void ControllerPrivate::processMessage(const QByteArray &waveletId, const QStrin
 			QVariantMap waveletMap = propertyMap["wavelet"].toMap();
 			QByteArray rootBlipId = waveletMap["rootBlipId"].toByteArray();
 			wavelet->loadBlipsFromSnapshot(blips, rootBlipId);
+			this->m_openWavelets.insert(wavelet->id());
 			emit q->waveletOpened(wavelet->id(), wavelet->isRoot());
 		}
 		else if (type == "OPERATION_MESSAGE_BUNDLE") {
@@ -658,6 +697,17 @@ void Controller::textDeleted(const QByteArray &waveletId, const QByteArray &blip
 	Blip * b = w->blipById(blipId); Q_ASSERT(b);
 	d->mcached[waveletId]->documentDelete(blipId, start, end);
 	b->deleteText(start, end-start, this->viewer(), true);
+	b->setLastModified(QDateTime::currentDateTime());
+}
+
+void Controller::elementInsert(const QByteArray &waveletId, const QByteArray &blipId, int index, int type, const QVariantMap &properties)
+{
+	P_D(Controller);
+	Q_ASSERT(d->m_allWavelets.contains(waveletId));
+	Wavelet * w = d->m_allWavelets[waveletId];
+	Blip * b = w->blipById(blipId); Q_ASSERT(b);
+	d->mcached[waveletId]->documentElementInsert(blipId, index, type, properties);
+	b->insertElement(index, (Element::Type) type, properties, this->viewer(), false);
 	b->setLastModified(QDateTime::currentDateTime());
 }
 
@@ -751,13 +801,15 @@ void ControllerPrivate::_q_wavelet_participantsChanged()
 	Q_ASSERT(wavelet);
 	if (!wavelet->participant(this->m_viewerId)) { // I got kicked
 		WaveModel * wave = wavelet->waveModel();
+		QByteArray waveletId = wavelet->id();
 		if (wavelet == wave->rootWavelet()) // It was the root wavelet, oh no!
 			this->removeWave(wave->id(), true);
 		else { // Some other wavelet I was on, phew...
-			QByteArray waveletId = wavelet->id();
 			wave->removeWavelet(waveletId);
 			this->m_allWavelets.remove(waveletId);
 		}
+		// Wavelet has been closed implicitly
+		this->m_openWavelets.remove(waveletId);
 	}
 }
 
@@ -798,6 +850,14 @@ int Controller::searchForParticipant(const QString &text)
 	P_D(Controller);
 	d->sendJson("manager", "PARTICIPANT_SEARCH", text);
 	return ++d->m_lastSearchId;
+}
+
+QList< QHash<QString,QString> > Controller::gadgetList()
+{
+	P_D(Controller);
+	if (d->m_cachedGadgetList.isEmpty())
+		this->refreshGadgetList();
+	return d->m_cachedGadgetList;
 }
 
 void ControllerPrivate::_q_pendingTimer_timeout()

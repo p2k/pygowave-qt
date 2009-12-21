@@ -94,10 +94,10 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 				'spellcheck': 'false'
 			});
 			
-			this._onInsertText = this._onInsertText.bind(this);
-			this._onDeleteText = this._onDeleteText.bind(this);
-			this._onInsertElement = this._onInsertElement.bind(this);
-			this._onDeleteElement = this._onDeleteElement.bind(this);
+			this._onInsertedText = this._onInsertedText.bind(this);
+			this._onDeletedText = this._onDeletedText.bind(this);
+			this._onInsertedElement = this._onInsertedElement.bind(this);
+			this._onDeletedElement = this._onDeletedElement.bind(this);
 			this._onKeyDown = this._onKeyDown.bind(this);
 			this._onKeyPress = this._onKeyPress.bind(this);
 			this._onKeyUp = this._onKeyUp.bind(this);
@@ -142,11 +142,11 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 			var ok = this.reloadContent();
 			
 			blip.addEvents({
-				insertText: this._onInsertText,
-				deleteText: this._onDeleteText,
+				insertedText: this._onInsertedText,
+				deletedText: this._onDeletedText,
 				outOfSync: this._onOutOfSync,
-				insertElement: this._onInsertElement,
-				deleteElement: this._onDeleteElement,
+				insertedElement: this._onInsertedElement,
+				deletedElement: this._onDeletedElement,
 				lastModifiedChanged: this._onLastModifiedChanged,
 				contributorAdded: this._onContributorAdded
 			});
@@ -185,11 +185,11 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 				it.next().removeEvent("dataChanged", this._updateContributorNames);
 			this._contributorObjects.empty();
 			this._blip.removeEvents({
-				insertText: this._onInsertText,
-				deleteText: this._onDeleteText,
+				insertedText: this._onInsertedText,
+				deletedText: this._onDeletedText,
 				outOfSync: this._onOutOfSync,
-				insertElement: this._onInsertElement,
-				deleteElement: this._onDeleteElement
+				insertedElement: this._onInsertedElement,
+				deletedElement: this._onDeletedElement
 			});
 			this.contentElement.removeEvents({
 				keydown: this._onKeyDown,
@@ -370,8 +370,11 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 				this._editControls.inject(this.contentElement, "bottom");
 				this._editControls.contentEditable = "false";
 			}
+			for (var it = new _Iterator(this._elements); it.hasNext(); )
+				it.next().setDeleteBoxVisible(true);
 			this._editing = true;
 			this.fireEvent("blipEditing", this._blip.id());
+			this.contentElement.focus();
 			var ret = this._walkDown(this.contentElement, this._blip.content().length);
 			var sel = new Selection(ret[0], ret[1], ret[0], ret[1]);
 			sel.select();
@@ -387,6 +390,8 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 			if (!this._editing)
 				return;
 			this.toggleDraft(false);
+			for (var it = new _Iterator(this._elements); it.hasNext(); )
+				it.next().setDeleteBoxVisible(false);
 			this._editControls.setStyle("visibility", "hidden");
 			this._editControls.setStyle("position", "absolute");
 			this._editControls.setStyle("top", "0");
@@ -550,7 +555,7 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		checkOrAddNewline: function (index) {
 			var text = this.contentToString();
 			if (index > 0 && text.substr(index-1, 1) != "\n") {
-				this._onInsertText(index, "\n");
+				this._onInsertedText(index, "\n");
 				this._view.setBusy();
 				this._view.fireEvent(
 					'textInserted',
@@ -629,6 +634,12 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		},
 		
 		_onKeyDown: function (e) {
+			// Capture Shift+Enter
+			if (e.shift && e.key == 'enter') {
+				e.stop();
+				this.finishBlip();
+				return;
+			}
 			this._firstKeyPress = true;
 			this._view.setBusy();
 		},
@@ -758,11 +769,11 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		/**
 		 * Callback from model on text insertion
 		 *
-		 * @function {private} _onInsertText
+		 * @function {private} _onInsertedText
 		 * @param {int} index Index of the inserion
 		 * @param {String} text Text to be inserted
 		 */
-		_onInsertText: function (index, text) {
+		_onInsertedText: function (index, text) {
 			//TODO: this function assumes no formatting elements
 			this._view.setBusy();
 			
@@ -844,11 +855,11 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		/**
 		 * Callback from model on text deletion
 		 *
-		 * @function {private} _onDeleteText
+		 * @function {private} _onDeletedText
 		 * @param {int} index Index of the deletion
 		 * @param {String} length How many characters to delete
 		 */
-		_onDeleteText: function (index, length) {
+		_onDeletedText: function (index, length) {
 			// Safe for formatting elements
 			this._view.setBusy();
 			var rlength = length; // Remaining length
@@ -902,7 +913,7 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		 *
 		 * @param {int} index Offset where the element is inserted
 		 */
-		_onInsertElement: function (index) {
+		_onInsertedElement: function (index) {
 			this._view.setBusy();
 			
 			var elt = this._blip.elementAt(index);
@@ -915,6 +926,8 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 			
 			//TODO other elements
 			var ew = new GadgetElementWidget(this._view, elt, para, 'before');
+			if (this._editing)
+				ew.setDeleteBoxVisible(true);
 			ew.addEvent('deleteClicked', this.deleteElementWidgetAt);
 			
 			this._elements.push(ew);
@@ -932,7 +945,7 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		 *
 		 * @param {int} index Offset where the element is deleted
 		 */
-		_onDeleteElement: function (index) {
+		_onDeletedElement: function (index) {
 			this._view.setBusy();
 			
 			this.deleteElementWidgetAt(index, true);

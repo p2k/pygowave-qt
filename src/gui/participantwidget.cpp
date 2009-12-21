@@ -23,7 +23,7 @@
 
 #include "avatarloader.h"
 
-#include "PyGoWaveApi/model.h"
+#include <PyGoWaveApi/model.h>
 
 ParticipantWidget::ParticipantWidget(PyGoWave::Participant * participant, ParticipantWidget::DisplayStyle style, QWidget *parent) : QWidget(parent), ui(new Ui::ParticipantWidget)
 {

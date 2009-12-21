@@ -4,15 +4,14 @@
 QT += network \
     webkit \
     xml
-macx {
-	LIBS += -framework PyGoWaveApi -framework JSWrapper
-}
-else:win32 {
-	LIBS += -lpygowave_api0 -ljswrapper0
-}
-else {
-	LIBS += -lpygowave_api -ljswrapper
-}
+macx:LIBS += -framework \
+    PyGoWaveApi \
+    -framework \
+    JSWrapper
+else:win32:LIBS += -lpygowave_api0 \
+    -ljswrapper0
+else:LIBS += -lpygowave_api \
+    -ljswrapper
 LIBS += -lqjson
 TARGET = PyGoWaveDesktopClient
 TEMPLATE = app
@@ -28,7 +27,10 @@ SOURCES += src/main.cpp \
     src/gui/waveletwidget.cpp \
     src/gui/addparticipantwindow.cpp \
     src/js_api.cpp \
-    src/gui/preferencesdialog.cpp
+    src/gui/preferencesdialog.cpp \
+    src/waveletnetworkaccessmanager.cpp \
+    src/gui/addgadgetwindow.cpp \
+    src/gui/widthadjustingscrollarea.cpp
 HEADERS += src/gui/mainwindow.h \
     src/model_qt.h \
     src/gui/connectdialog.h \
@@ -38,14 +40,18 @@ HEADERS += src/gui/mainwindow.h \
     src/gui/waveletwidget.h \
     src/gui/addparticipantwindow.h \
     src/js_api.h \
-    src/gui/preferencesdialog.h
+    src/gui/preferencesdialog.h \
+    src/waveletnetworkaccessmanager.h \
+    src/gui/addgadgetwindow.h \
+    src/gui/widthadjustingscrollarea.h
 FORMS += src/gui/mainwindow.ui \
     src/gui/connectdialog.ui \
     src/gui/onlinestateindicator.ui \
     src/gui/participantwidget.ui \
     src/gui/waveletwidget.ui \
     src/gui/addparticipantwindow.ui \
-    src/gui/preferencesdialog.ui
+    src/gui/preferencesdialog.ui \
+    src/gui/addgadgetwindow.ui
 RESOURCES += src/main.qrc
 VERSION = 0.2.0
 target.path = $$[QT_INSTALL_BINS]

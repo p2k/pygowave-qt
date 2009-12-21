@@ -137,7 +137,7 @@ dbgprint = function () {
 		opera.postError(s);
 	else
 		alert(s);
-}
+};
 
 /*  
  *  Javascript sprintf

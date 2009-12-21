@@ -20,8 +20,9 @@
 
 #include "model_qt.h"
 #include "avatarloader.h"
-#include "PyGoWaveApi/model.h"
-#include "PyGoWaveApi/controller.h"
+
+#include <PyGoWaveApi/model.h>
+#include <PyGoWaveApi/controller.h>
 
 #include <QtCore/QSignalMapper>
 #include <QtGui/QPainter>

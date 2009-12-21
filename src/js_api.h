@@ -47,21 +47,23 @@ namespace PyGoWave {
 		QStringList classNameList() const;
 		void install(QWebFrame * webFrame);
 
+		bool checkOrAddNewline(int index);
+
 	signals:
 		void currentTextRangeChanged(int start, int end);
-		void blipEditing(bool enabled);
+		void blipEditing(const QByteArray &blipId);
 
 	public slots:
 		void textInserted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &content);
 		void textDeleted(const QByteArray &waveletId, const QByteArray &blipId, int start, int end);
 		void elementDelete(const QByteArray &waveletId, const QByteArray &blipId, int index);
-		void elementDeltaSubmitted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QVariantMap &delta);
+		void elementDeltaSubmitted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &s_delta);
 		void elementSetUserpref(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &key, const QString &value);
 		void deleteBlip(const QByteArray &waveletId, const QByteArray &blipId);
 		void draftBlip(const QByteArray &waveletId, const QByteArray &blipId, bool enabled);
 
 		void emitCurrentTextRangeChanged(int start, int end);
-		void emitBlipEditing(bool enabled);
+		void emitBlipEditing(const QString &blipId);
 
 	protected:
 		JSWrapper * createWrapper(const QString &className, const QString &objectId, JSWrapper * parent);
@@ -176,6 +178,9 @@ namespace PyGoWave {
 
 	public:
 		GadgetElementWrapper(QWebFrame * webFrame, GadgetElement * gadget, JSWrapper * parent);
+
+	public slots:
+		QString fieldsJSON() const;
 
 	private slots:
 		void stateChange();

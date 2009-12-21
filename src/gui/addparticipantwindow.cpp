@@ -21,7 +21,7 @@
 #include "addparticipantwindow.h"
 #include "ui_addparticipantwindow.h"
 
-#include "PyGoWaveApi/controller.h"
+#include <PyGoWaveApi/controller.h>
 #include "model_qt.h"
 
 AddParticipantWindow::AddParticipantWindow(PyGoWave::Controller * controller, QWidget *parent) : QDialog(parent), ui(new Ui::AddParticipantWindow)

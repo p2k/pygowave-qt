@@ -36,7 +36,10 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 			return this._cpp.displayName;
 		},
 		thumbnailUrl: function () {
-			return this._cpp.thumbnailUrl;
+			var url = this._cpp.thumbnailUrl;
+			if (url.substr(0,7) == "http://")
+				url = "avatar:" + url.substr(7);
+			return url;
 		},
 		profileUrl: function () {
 			return this._cpp.profileUrl;
@@ -233,7 +236,7 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 		Extends: Element,
 		
 		fields: function () {
-			return this._cpp.fields;
+			return JSON.decode(this._wrapper.fieldsJSON());
 		},
 		userPrefs: function () {
 			return this._cpp.userPrefs;
@@ -253,8 +256,8 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 	var WaveView = new Class({
 		Implements: [Options, Events],
 		options: {
-			gadgetLoaderUrl: "about:blank",
-			defaultThumbnailUrl: "about:blank",
+			gadgetLoaderUrl: "wavelet:load?rc=gadget&",
+			defaultThumbnailUrl: "avatar:default",
 			rtl: false
 		},
 
@@ -267,7 +270,7 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 			this.addEvent("textInserted", pygowave.api.cpp.textInserted);
 			this.addEvent("textDeleted", pygowave.api.cpp.textDeleted);
 			this.addEvent("elementDelete", pygowave.api.cpp.elementDelete);
-			this.addEvent("elementDeltaSubmitted", pygowave.api.cpp.elementDeltaSubmitted);
+			this.addEvent("elementDeltaSubmitted", this._elementDeltaSubmitted.bind(this));
 			this.addEvent("elementSetUserpref", pygowave.api.cpp.elementSetUserpref);
 			this.addEvent("deleteBlip", pygowave.api.cpp.deleteBlip);
 			this.addEvent("draftBlip", pygowave.api.cpp.draftBlip);
@@ -302,8 +305,10 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 				deleteBlip: this._onDeleteBlip
 			});
 			blip.addEvent('idChanged', this._onBlipIdChanged);
-			if (blip.id().startswith("TBD_"))
+			if (blip.id().startswith("TBD_") || (blip.isRoot() && blip.content().length == 0)) {
 				editor.editBlip();
+				new Fx.Scroll(window).toBottom();
+			}
 		},
 		_onBlipDeleted: function (blipId) {
 			var editor = this._blipEditors.get(blipId);
@@ -335,12 +340,12 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 				this._activeBlipEditor.finishBlip();
 			this._activeBlipEditor = editor;
 			editor.addEvent("currentTextRangeChanged", this._onCurrentTextRangeChanged);
-			pygowave.api.cpp.emitBlipEditing(true);
+			pygowave.api.cpp.emitBlipEditing(blipId);
 		},
 		_onBlipDone: function (blipId) {
 			var editor = this._blipEditors.get(blipId);
 			this._activeBlipEditor = null;
-			pygowave.api.cpp.emitBlipEditing(false);
+			pygowave.api.cpp.emitBlipEditing("");
 			this._onCurrentTextRangeChanged(-1, -1);
 			editor.removeEvent("currentTextRangeChanged", this._onCurrentTextRangeChanged);
 		},
@@ -350,6 +355,9 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 			if (end == null)
 				end = -1;
 			pygowave.api.cpp.emitCurrentTextRangeChanged(start, end);
+		},
+		_elementDeltaSubmitted: function (waveletId, blipId, index, delta) {
+			pygowave.api.cpp.elementDeltaSubmitted(waveletId, blipId, index, JSON.encode(delta));
 		},
 
 		defaultThumbnailUrl: function () {
@@ -363,9 +371,11 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 		showQuestion: function (message, title, yesCallback, noCallback, yesLabel, noLabel) {
 			alert("WaveView::showQuestion - not implemented");
 		},
-		//TODO
-		insertGadgetAtCursor: function (waveletId, url) {
-			return false;
+
+		checkOrAddNewline: function (index) {
+			if (this._activeBlipEditor != null)
+				return this._activeBlipEditor.checkOrAddNewline(index);
+			return true;
 		},
 
 		isBusy: function () {
@@ -385,12 +395,12 @@ pygowave.api = $defined(pygowave.api) ? pygowave.api : new Hash();
 		}
 	});
 
-	var setup = function (cpp_obj, waveId, waveletId, options) {
+	var setup = function (cpp_obj, waveId, waveletId) {
 		window.console.info("PyGoWaveJSAPI: Setup started...");
 		pygowave.api.extend({
 			cpp: cpp_obj
 		});
-		window.__wave_view__ = new WaveView(document.body, waveId, waveletId, options);
+		window.__wave_view__ = new WaveView(document.body, waveId, waveletId);
 		window.console.info("PyGoWaveJSAPI: Setup completed");
 	};
 

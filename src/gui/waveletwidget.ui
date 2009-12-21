@@ -15,7 +15,7 @@
 	border-top: 1px solid #FFFFFF;
 	background-color: #DDDDDD;
 }
-QWidget#participants {
+QWidget#participantsBar, QWidget#participantsList {
 	background-color: rgb(201, 226, 252);
 }
 QWidget#toolbar {
@@ -25,11 +25,13 @@ QWidget#toolbar {
 	border-top: 1px solid #B8C6D9;
 	border-bottom: 1px solid #B8C6D9;
 }
+QWidget#toolbar:first-child {
+	margin-left: 2px;
+}
 QWidget#toolbar &gt; QToolButton {
 	height: 16px;
 	border: none;
 	padding: 3px 1px;
-	margin-left: 2px;
 }
 QWidget#toolbar &gt; QToolButton:hover {
 	background-image: url(:/gui/gfx/wavelet-toolbar-hover.png);
@@ -41,6 +43,15 @@ QWidget#toolbar &gt; QToolButton:hover {
 QWidget#toolbar &gt; QToolButton:pressed {
 	background-image: url(:/gui/gfx/wavelet-toolbar-active.png);
 	padding: 3px 1px 1px 1px;
+}
+QWidget#toolbar &gt; QToolButton:disabled {
+	color: #BBBBBB;
+}
+QWidget#leftScroller {
+	background-image: url(:/gui/gfx/scroll-left.png);
+}
+QWidget#rightScroller {
+	background-image: url(:/gui/gfx/scroll-right.png);
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
@@ -51,17 +62,14 @@ QWidget#toolbar &gt; QToolButton:pressed {
     <number>0</number>
    </property>
    <item>
-    <widget class="QWidget" name="participants" native="true">
-     <property name="minimumSize">
+    <widget class="QWidget" name="participantsBar" native="true">
+     <property name="maximumSize">
       <size>
-       <width>0</width>
+       <width>16777215</width>
        <height>54</height>
       </size>
      </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <layout class="QHBoxLayout" name="participantsLayout">
+     <layout class="QHBoxLayout" name="participantsBarLayout">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -69,11 +77,104 @@ QWidget#toolbar &gt; QToolButton:pressed {
        <number>6</number>
       </property>
       <property name="topMargin">
-       <number>1</number>
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>4</number>
       </property>
       <property name="bottomMargin">
-       <number>1</number>
+       <number>0</number>
       </property>
+      <item>
+       <widget class="WidthAdjustingScrollArea" name="participantsContainer">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>2</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>54</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::NoFrame</enum>
+        </property>
+        <property name="verticalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="widgetResizable">
+         <bool>true</bool>
+        </property>
+        <widget class="QWidget" name="participantsList">
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>54</width>
+           <height>56</height>
+          </rect>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <layout class="QHBoxLayout" name="participantsLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>1</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>1</number>
+          </property>
+          <item>
+           <widget class="QWidget" name="leftScroller" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>24</width>
+              <height>54</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>24</width>
+              <height>54</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="rightScroller" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>24</width>
+              <height>54</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>24</width>
+              <height>54</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </widget>
+      </item>
       <item>
        <widget class="QToolButton" name="cmdAddParticipant">
         <property name="minimumSize">
@@ -107,13 +208,13 @@ QWidget#toolbar &gt; QToolButton:pressed {
        </widget>
       </item>
       <item>
-       <spacer name="horizontalSpacer">
+       <spacer name="participantsSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
-          <width>592</width>
+          <width>0</width>
           <height>20</height>
          </size>
         </property>
@@ -137,6 +238,9 @@ QWidget#toolbar &gt; QToolButton:pressed {
       </size>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="spacing">
+       <number>3</number>
+      </property>
       <property name="leftMargin">
        <number>2</number>
       </property>
@@ -173,6 +277,36 @@ QWidget#toolbar &gt; QToolButton:pressed {
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="label">
+        <property name="pixmap">
+         <pixmap resource="../main.qrc">:/gui/gfx/separator.png</pixmap>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="cmdAddGadget">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Add Gadget</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../main.qrc">
+          <normaloff>:/gui/icons/add-gadget.png</normaloff>:/gui/icons/add-gadget.png</iconset>
+        </property>
+        <property name="toolButtonStyle">
+         <enum>Qt::ToolButtonTextBesideIcon</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer_2">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -184,6 +318,23 @@ QWidget#toolbar &gt; QToolButton:pressed {
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QToolButton" name="cmdWaveletOptions">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>22</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Options Menu</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../main.qrc">
+          <normaloff>:/gui/gfx/dropdown.png</normaloff>:/gui/gfx/dropdown.png</iconset>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -238,12 +389,45 @@ QWidget#toolbar &gt; QToolButton:pressed {
     </widget>
    </item>
   </layout>
+  <action name="actDetachTab">
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/tab-detach.png</normaloff>:/gui/icons/tab-detach.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Detach Tab</string>
+   </property>
+  </action>
+  <action name="actLeaveWave">
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/system-shutdown.png</normaloff>:/gui/icons/system-shutdown.png</iconset>
+   </property>
+   <property name="text">
+    <string>Leave Wave</string>
+   </property>
+  </action>
+  <action name="actAttachTab">
+   <property name="icon">
+    <iconset resource="../main.qrc">
+     <normaloff>:/gui/icons/tab-detach.png</normaloff>:/gui/icons/tab-detach.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Attach Tab</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>QWebView</class>
    <extends>QWidget</extends>
    <header>QtWebKit/QWebView</header>
+  </customwidget>
+  <customwidget>
+   <class>WidthAdjustingScrollArea</class>
+   <extends>QScrollArea</extends>
+   <header>gui/widthadjustingscrollarea.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

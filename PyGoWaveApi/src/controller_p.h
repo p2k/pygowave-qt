@@ -56,6 +56,7 @@ namespace PyGoWave {
 			QMap<QByteArray,Participant*> m_allParticipants;
 			bool m_participantsTodoCollect;
 			QSet<QByteArray> m_participantsTodo;
+			QSet<QByteArray> m_openWavelets;
 
 			QMap<QByteArray,OpManager*> mcached;
 			QMap<QByteArray,OpManager*> mpending;
@@ -64,6 +65,8 @@ namespace PyGoWave {
 
 			int m_lastSearchId;
 			QByteArray m_createdWaveId;
+
+			QList< QHash<QString,QString> > m_cachedGadgetList;
 
 			void addWave(WaveModel * wave, bool initial);
 			void removeWave(const QByteArray &id, bool deleteObjects);
@@ -90,6 +93,7 @@ namespace PyGoWave {
 			void _q_conn_socketDisconnected();
 			void _q_conn_frameReceived();
 			void _q_conn_socketStateChanged(QAbstractSocket::SocketState);
+			void _q_conn_socketError(QAbstractSocket::SocketError);
 			void _q_pingTimer_timeout();
 			void _q_pendingTimer_timeout();
 			void _q_mcached_afterOperationsInserted(int start, int end);

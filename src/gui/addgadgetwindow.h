@@ -18,47 +18,44 @@
  * see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef AVATARLOADER_H
-#define AVATARLOADER_H
+#ifndef ADDGADGETWINDOW_H
+#define ADDGADGETWINDOW_H
 
-#include <QtCore/QObject>
-#include <QtCore/QMap>
-#include <QtGui/QPixmap>
+#include <QtGui/QDialog>
 
-class QNetworkAccessManager;
-class QNetworkReply;
+namespace PyGoWave
+{
+	class Controller;
+}
 
-class AvatarLoader : public QObject
+namespace Ui {
+	class AddGadgetWindow;
+}
+
+class AddGadgetWindow : public QDialog
 {
 	Q_OBJECT
-
 public:
-	static AvatarLoader * instance();
+	AddGadgetWindow(PyGoWave::Controller * controller, QWidget * parent = 0);
+	~AddGadgetWindow();
 
-	QPixmap get(const QString & url);
-	QPixmap getPrepared(const QString & url, const QSize &size);
-
-	QPixmap defaultAvatar();
-	QPixmap defaultAvatarPrepared(const QSize &size);
+protected:
+	void changeEvent(QEvent *e);
 
 signals:
-	void avatarReady(const QString & url, bool valid);
-
-private slots:
-	void on_mgr_finished(QNetworkReply * reply);
+	void gadgetSelected(const QString &url);
 
 private:
-	static AvatarLoader * g_instance;
-    AvatarLoader();
+	Ui::AddGadgetWindow * ui;
+	PyGoWave::Controller * m_controller;
+	QList< QHash<QString,QString> > m_gadgetList;
 
-	void queueRequest(const QString &url);
-	void doNextRequest();
+private slots:
+	void on_buttonBox_accepted();
+	void on_cmbGadgets_currentIndexChanged(int index);
+	void on_cmdReload_clicked();
 
-	QNetworkAccessManager * mgr;
-
-	QMap<QString, QPixmap> m_avatarCache;
-	QList<QString> m_requestQueue;
-	QPixmap m_defaultAvatar;
+	void updateGadgetList(const QList< QHash<QString,QString> > &gadgetList);
 };
 
-#endif // AVATARLOADER_H
+#endif // ADDGADGETWINDOW_H

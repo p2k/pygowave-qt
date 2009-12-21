@@ -20,12 +20,14 @@
 
 #include "js_api.h"
 
-#include "PyGoWaveApi/controller.h"
-#include "PyGoWaveApi/model.h"
+#include <PyGoWaveApi/controller.h>
+#include <PyGoWaveApi/model.h>
 
 #include <qjson/serializer.h>
+#include <qjson/parser.h>
 
 #include <QtWebKit/QWebFrame>
+#include <QtWebKit/QWebPage>
 
 using namespace PyGoWave;
 
@@ -62,10 +64,7 @@ void JavaScriptAPI::install(QWebFrame * webFrame)
 
 	this->registerFactory(webFrame);
 
-	QVariantMap options;
-	options["gadgetLoaderUrl"] = QString("http://%1/gadgets/load/?wave=1&").arg(this->m_controller->hostName());
-	options["defaultThumbnailUrl"] = QString("qrc:/gui/gfx/default-avatar.png");
-	this->m_webFrame->evaluateJavaScript(QString("pygowave.api.setup(%1, '%2', '%3', %4);").arg(this->javaScriptObjectName(), QString::fromAscii(this->m_waveId), QString::fromAscii(this->m_waveletId), QString::fromUtf8(jserializer.serialize(options))));
+	this->m_webFrame->evaluateJavaScript(QString("pygowave.api.setup(%1, '%2', '%3');").arg(this->javaScriptObjectName(), QString::fromAscii(this->m_waveId), QString::fromAscii(this->m_waveletId)));
 }
 
 QStringList JavaScriptAPI::classNameList() const
@@ -124,9 +123,14 @@ void JavaScriptAPI::emitCurrentTextRangeChanged(int start, int end)
 	emit currentTextRangeChanged(start, end);
 }
 
-void JavaScriptAPI::emitBlipEditing(bool enabled)
+void JavaScriptAPI::emitBlipEditing(const QString &blipId)
 {
-	emit blipEditing(enabled);
+	emit blipEditing(blipId.toAscii());
+}
+
+bool JavaScriptAPI::checkOrAddNewline(int index)
+{
+	return this->m_webFrame->evaluateJavaScript(QString("__wave_view__.checkOrAddNewline(%1)").arg(index)).toBool();
 }
 
 // Forwarding to controller
@@ -142,9 +146,9 @@ void JavaScriptAPI::elementDelete(const QByteArray &waveletId, const QByteArray 
 {
 	this->m_controller->elementDelete(waveletId, blipId, index);
 }
-void JavaScriptAPI::elementDeltaSubmitted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QVariantMap &delta)
+void JavaScriptAPI::elementDeltaSubmitted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &s_delta)
 {
-	this->m_controller->elementDeltaSubmitted(waveletId, blipId, index, delta);
+	this->m_controller->elementDeltaSubmitted(waveletId, blipId, index, QJson::Parser().parse(s_delta.toUtf8()).toMap());
 }
 void JavaScriptAPI::elementSetUserpref(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &key, const QString &value)
 {
@@ -395,6 +399,14 @@ void BlipWrapper::contributorAdded(const QByteArray &id)
 GadgetElementWrapper::GadgetElementWrapper(QWebFrame * webFrame, GadgetElement * gadget, JSWrapper * parent) : JSWrapper(webFrame, gadget, QString::number(gadget->id()), parent)
 {
 	this->m_gadget = gadget;
+	connect(this->m_gadget, SIGNAL(stateChange()), this, SLOT(stateChange()));
+	connect(this->m_gadget, SIGNAL(userPrefSet(QString,QString)), this, SLOT(userPrefSet(QString,QString)));
+}
+
+QString GadgetElementWrapper::fieldsJSON() const
+{
+	QByteArray ser = QJson::Serializer().serialize(this->m_gadget->fields());
+	return QString::fromUtf8(ser);
 }
 
 void GadgetElementWrapper::stateChange()

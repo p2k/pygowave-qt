@@ -26,8 +26,8 @@
 #include "waveletwidget.h"
 #include "preferencesdialog.h"
 
-#include "PyGoWaveApi/controller.h"
-#include "PyGoWaveApi/model.h"
+#include <PyGoWaveApi/controller.h>
+#include <PyGoWaveApi/model.h>
 #include "model_qt.h"
 
 #include <QtGui/QMessageBox>
@@ -35,6 +35,7 @@
 #include <QtGui/QCloseEvent>
 #include <QtGui/QFocusEvent>
 #include <QtCore/QSettings>
+#include <QtGui/QDesktopWidget>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -53,11 +54,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 	this->ui->statusBar->showMessage(tr("Welcome!"), 5000);
 
 	QSettings settings;
+	delete this->ui->placeholderTab;
+	if (settings.contains("WindowState"))
+		this->restoreState(settings.value("WindowState").toByteArray());
+	if (!settings.value("UseTabs").toBool()) {
+		this->ui->waveTabs->hide();
+		if (settings.contains("WindowGeometry"))
+			this->setGeometry(settings.value("WindowGeometry").value<QRect>());
+	}
+	else {
+		if (settings.contains("WindowGeometryTabbed")) {
+			this->setGeometry(settings.value("WindowGeometryTabbed").value<QRect>());
+			this->ui->splitter->restoreState(settings.value("WindowSplitTabbed").toByteArray());
+		}
+		else {
+			this->resize(1024, this->height());
+			this->ui->splitter->setSizes(QList<int>() << 310 << 714);
+		}
+	}
+
 	if (!settings.value("Tray", true).toBool() || !settings.value("StartHidden", false).toBool())
 		this->show();
 
 	if (settings.value("InitialStatus", 0).toInt() == 1)
 		this->on_actConnect_triggered();
+
+	this->ui->waveTabs->addAction(this->ui->actDetachTab);
 
 	QIcon icon;
 	icon.addPixmap(QPixmap(":/gui/icons/PyGoWave-256.png"));
@@ -136,8 +158,13 @@ void MainWindow::on_waveList_doubleClicked(const QModelIndex &index)
 	PyGoWave::WaveModel * wave = this->controller->wave(index.data(PyGoWaveList::WaveIdRole).toByteArray());
 	if (wave) {
 		PyGoWave::Wavelet * wavelet = wave->rootWavelet();
-		if (this->waveletWidgets.contains(wavelet->id()))
-			this->waveletWidgets[wavelet->id()]->setFocus();
+		if (this->waveletWidgets.contains(wavelet->id())) {
+			WaveletWidget * ww = this->waveletWidgets[wavelet->id()];
+			if (ww->parent() == NULL)
+				ww->setFocus();
+			else
+				this->ui->waveTabs->setCurrentWidget(ww);
+		}
 		else
 			this->controller->openWavelet(wavelet->id());
 	}
@@ -145,6 +172,14 @@ void MainWindow::on_waveList_doubleClicked(const QModelIndex &index)
 
 void MainWindow::closeEvent(QCloseEvent * event)
 {
+	QSettings settings;
+	if (this->ui->waveTabs->isVisible()) {
+		settings.setValue("WindowGeometryTabbed", this->geometry());
+		settings.setValue("WindowSplitTabbed", this->ui->splitter->saveState());
+	}
+	else
+		settings.setValue("WindowGeometry", this->geometry());
+	settings.setValue("WindowState", this->saveState());
 	foreach (QByteArray id, this->waveletWidgets.keys()) {
 		WaveletWidget * ww = this->waveletWidgets[id];
 		if (!ww->close()) {
@@ -162,14 +197,33 @@ void MainWindow::wavelet_closing(const QByteArray &id)
 	this->waveletWidgets.take(id)->deleteLater();
 }
 
+void MainWindow::on_waveTabs_tabCloseRequested(int index)
+{
+	WaveletWidget * ww = qobject_cast<WaveletWidget*>(this->ui->waveTabs->widget(index));
+	ww->close();
+	this->ui->actDetachTab->setEnabled(this->ui->waveTabs->count()-1 > 0);
+}
+
 void MainWindow::on_controller_waveletOpened(const QByteArray &waveletId, bool isRoot)
 {
 	if (!isRoot)
 		return;
 	PyGoWave::Wavelet * wavelet = this->controller->wavelet(waveletId);
-	WaveletWidget * ww = new WaveletWidget(wavelet, this->controller);
+	QSettings settings;
+	WaveletWidget * ww;
+	if (settings.value("UseTabs").toBool()) {
+		ww = new WaveletWidget(wavelet, this->controller, this->ui->waveTabs);
+		this->ui->waveTabs->addTab(ww, wavelet->title());
+		this->ui->waveTabs->setCurrentWidget(ww);
+		ww->setTabState(true, true);
+		this->ui->actDetachTab->setEnabled(this);
+	}
+	else
+		ww = new WaveletWidget(wavelet, this->controller);
 	this->waveletWidgets[wavelet->id()] = ww;
 	connect(ww, SIGNAL(closing(QByteArray)), this, SLOT(wavelet_closing(QByteArray)));
+	connect(ww, SIGNAL(attachTabRequest()), this, SLOT(wavelet_attachRequest()));
+	connect(ww, SIGNAL(detachTabRequest()), this, SLOT(wavelet_deachRequest()));
 	ww->show();
 }
 
@@ -202,8 +256,10 @@ void MainWindow::on_controller_waveAdded(const QByteArray &waveId, bool created,
 	PyGoWave::Wavelet * wavelet = this->controller->wave(waveId)->rootWavelet();
 	if (created)
 		this->controller->openWavelet(wavelet->id());
-	if (!initial)
+	if (!initial && !created) {
 		this->indicator->showNotification(tr("New Wave"), tr("You have been added to the Wave \"%1\" created by %2.").arg(wavelet->title()).arg(wavelet->creator()->displayName()), 1);
+		this->ui->waveList->scrollToBottom();
+	}
 }
 
 void MainWindow::on_actLeaveWave_triggered()
@@ -236,6 +292,15 @@ void MainWindow::on_action_Preferences_triggered()
 	PreferencesDialog prefdlg;
 	prefdlg.exec();
 	this->indicator->updateTraySettings();
+
+	if (QSettings().value("UseTabs").toBool()) {
+		if (!this->ui->waveTabs->isVisible())
+			this->catchWavelets();
+	}
+	else {
+		if (this->ui->waveTabs->isVisible())
+			this->freeWavelets();
+	}
 }
 
 void MainWindow::on_indicator_stateChangeRequested(int istate)
@@ -263,4 +328,105 @@ void MainWindow::focusInEvent(QFocusEvent * event)
 {
 	this->indicator->stopAnimation();
 	QMainWindow::focusInEvent(event);
+}
+
+void MainWindow::catchWavelets()
+{
+	QSettings settings;
+	settings.setValue("WindowGeometry", this->geometry());
+	
+	if (settings.contains("WindowGeometryTabbed")) {
+		this->setGeometry(settings.value("WindowGeometryTabbed").value<QRect>());
+		this->ui->splitter->restoreState(settings.value("WindowSplitTabbed").toByteArray());
+	}
+	else {
+		this->resize(1024, this->height());
+		this->ui->splitter->setSizes(QList<int>() << 310 << 714);
+	}
+	this->ui->waveTabs->setVisible(true);
+	foreach (WaveletWidget * ww, this->waveletWidgets.values()) {
+		if (ww->parent() == NULL) {
+			ww->hide();
+			ww->setParent(this->ui->waveTabs);
+			this->ui->waveTabs->addTab(ww, ww->wavelet()->title());
+		}
+		ww->setTabState(true, true);
+	}
+	this->ui->actDetachTab->setEnabled(this->ui->waveTabs->count() > 0);
+}
+
+void MainWindow::freeWavelets()
+{
+	static const int delta = 25;
+	QSettings settings;
+	settings.setValue("WindowGeometryTabbed", this->geometry());
+	settings.setValue("WindowSplitTabbed", this->ui->splitter->saveState());
+
+	this->ui->waveTabs->setVisible(false);
+	QPoint pos = this->pos();
+	QDesktopWidget * desktop = qApp->desktop();
+	foreach (WaveletWidget * ww, this->waveletWidgets.values()) {
+		if (ww->parent() != NULL) {
+			this->ui->waveTabs->removeTab(this->ui->waveTabs->indexOf(ww));
+			ww->setParent(NULL);
+			if (pos.y() + ww->height() > desktop->height())
+				pos.setY(desktop->height() - ww->height());
+			if (pos.x() + ww->width() > desktop->width())
+				pos.setX(desktop->width() - ww->width());
+			if (pos.y() + delta + ww->height() < desktop->height())
+				pos.ry() += delta;
+			if (pos.x() + delta + ww->width() < desktop->width())
+				pos.rx() += delta;
+			ww->move(pos);
+			ww->show();
+		}
+		ww->setTabState(false, false);
+	}
+
+	if (settings.contains("WindowGeometry"))
+		this->setGeometry(settings.value("WindowGeometry").value<QRect>());
+	else
+		this->resize(314, this->height());
+	this->ui->actDetachTab->setEnabled(false);
+}
+
+void MainWindow::on_actDetachTab_triggered()
+{
+	this->detachWavelet(qobject_cast<WaveletWidget*>(this->ui->waveTabs->currentWidget()));
+}
+
+void MainWindow::detachWavelet(WaveletWidget * ww)
+{
+	if (ww == NULL)
+		return;
+	int index = this->ui->waveTabs->indexOf(ww);
+	if (index == -1)
+		return;
+	this->ui->waveTabs->removeTab(index);
+	ww->setParent(NULL);
+	QPoint pos = this->pos();
+	QDesktopWidget * desktop = qApp->desktop();
+	if (pos.y() + ww->height() > desktop->height())
+		pos.setY(desktop->height() - ww->height());
+	if (pos.x() + ww->width() > desktop->width())
+		pos.setX(desktop->width() - ww->width());
+	ww->move(pos);
+	ww->show();
+	ww->setTabState(true, false);
+	this->ui->actDetachTab->setEnabled(this->ui->waveTabs->count() > 0);
+}
+
+void MainWindow::wavelet_attachRequest()
+{
+	WaveletWidget * ww = qobject_cast<WaveletWidget*>(this->sender());
+	ww->hide();
+	ww->setParent(this->ui->waveTabs);
+	this->ui->waveTabs->addTab(ww, ww->wavelet()->title());
+	this->ui->actDetachTab->setEnabled(true);
+	ww->setTabState(true, true);
+}
+
+void MainWindow::wavelet_deachRequest()
+{
+	this->detachWavelet(qobject_cast<WaveletWidget*>(this->sender()));
 }

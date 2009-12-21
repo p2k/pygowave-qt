@@ -22,11 +22,23 @@
 #include <QtCore/QTranslator>
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QLocale>
+#include <QtCore/QDir>
 #include "gui/mainwindow.h"
 
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
+
+#if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
+	{
+		QDir dir(QApplication::applicationDirPath());
+#ifdef Q_OS_MAC
+		dir.cdUp();
+#endif
+		dir.cd("plugins");
+		QApplication::setLibraryPaths(QStringList(dir.absolutePath()));
+	}
+#endif
 
 	app.setOrganizationDomain("pygowave.org");
 	app.setOrganizationName("PyGoWave");

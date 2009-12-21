@@ -37,6 +37,8 @@ namespace PyGoWave {
 
 class ParticipantWidget;
 class AddParticipantWindow;
+class AddGadgetWindow;
+class WaveletNetworkAccessManager;
 
 class WaveletWidget : public QWidget
 {
@@ -48,12 +50,19 @@ public:
 
 	PyGoWave::Wavelet * wavelet();
 
+	void setTabState(bool tabsEnabled, bool attached);
+
 signals:
 	void closing(const QByteArray &id);
+	void detachTabRequest();
+	void attachTabRequest();
 
 protected:
     void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *e);
+	void resizeEvent(QResizeEvent *e);
+
+	bool eventFilter(QObject * watched, QEvent * event);
 
 private:
 	Ui::WaveletWidget * ui;
@@ -62,16 +71,36 @@ private:
 	PyGoWave::JavaScriptAPI * m_jsApi;
 	QMap<QByteArray,ParticipantWidget*> m_participants;
 	AddParticipantWindow * m_addPWindow;
+	AddGadgetWindow * m_addGWindow;
 	bool m_installedApi;
+	QTimer * m_scrollTimer;
+	bool m_scrollLeft;
+	int m_scrollSpeed;
+	QByteArray m_currentBlipId;
+	QPair<int,int> m_currentTextRange;
+	WaveletNetworkAccessManager * m_wnam;
+	QMenu * m_waveletOptions;
+
+	void checkOptionsSeperator();
 
 private slots:
+	void on_actLeaveWave_triggered();
+	void on_cmdWaveletOptions_clicked();
+	void on_cmdAddGadget_clicked();
 	void on_cmdReply_clicked();
 	void on_content_loadFinished(bool ok);
 	void on_cmdAddParticipant_clicked();
 	void on_jsApi_currentTextRangeChanged(int start, int end);
+	void on_jsApi_blipEditing(const QByteArray &blipId);
+	void on_scrollTimer_timeout();
+	void on_waveletOptions_aboutToHide();
+
+	void updateScrollers();
 
 	void participantSelected(const QByteArray &id);
 	void participantAddFinished();
+	void gadgetSelected(const QString &url);
+	void gadgetAddFinished();
 
 	void wavelet_statusChange(const QByteArray & status);
 	void wavelet_participantsChanged();

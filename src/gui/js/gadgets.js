@@ -82,24 +82,21 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 			contentElement.contentEditable = "false";
 			
 			this._deleteBox = new Element('div', {
-				'class': 'delete_box' + (Browser.Engine.presto ? '_opera' : ''),
+				'class': 'delete_box',
 				'title': gettext("Delete Gadget")
 			}).inject(contentElement);
+			this.setDeleteBoxVisible(false);
 			this._deleteBox.addEvent('click', function () {
 				this.fireEvent('deleteClicked', this._gadgetElement.position());
 			}.bind(this));
 			
 			var src = "%surl=%s&gadget_id=%d".sprintf(view.options.gadgetLoaderUrl, encodeURIComponent(gadgetElement.url()), gadgetElement.id());
 			
-			dbgprint(src);
-			
 			this._gadgetFrame = new Element('iframe', {
 				'src': src
 			}).inject(contentElement);
 			this._ready = false;
 			view.addEvent('loadFinished', this._onGadgetLoaded.bind(this));
-			dbgprint("test1");
-			
 			this.parent(parentElement, contentElement, where);
 		},
 		/**
@@ -139,6 +136,18 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		position: function () {
 			return this._gadgetElement.position();
 		},
+		/**
+		 * Shows or hides the delete box.
+		 *
+		 * @function {public} setDeleteBoxVisible
+		 * @param {Boolean} visible True to show, false to hide
+		 */
+		setDeleteBoxVisible: function (visible) {
+			if (visible)
+				this._deleteBox.setStyle("visibility", "visible");
+			else
+				this._deleteBox.setStyle("visibility", "hidden");
+		},
 		
 		/**
 		 * Callback from iframe on load. Invokes onLoad callbacks of the
@@ -147,15 +156,11 @@ pygowave.view = $defined(pygowave.view) ? pygowave.view : new Hash();
 		 * @function {private} _onGadgetLoaded
 		 */
 		_onGadgetLoaded: function () {
-			dbgprint("test2");
 			if (this._ready)
 				return;
 			
-			dbgprint(this._gadgetFrame.contentDocument.innerHtml);
-			
 			for (var it = new _Iterator(this._callbacksOnLoad); it.hasNext(); ) {
 				var callback = it.next();
-				dbgprint("Calling back");
 				callback();
 			}
 			this._callbacksOnLoad.empty();

@@ -8,100 +8,6 @@
 	height: 100%;
 }
 
-.wavelet_toolbar
-{
-	background: #E5ECF9 url(qrc:/gui/gfx/ui-bg_glass_100_E5ECF9_1x400.png) repeat-x scroll 50% 50%;
-	border-bottom: 1px solid #B8C6D9;
-	height: 22px;
-	width: 100%;
-	padding: 2px 0;
-	margin: 0;
-}
-
-.wavelet_toolbar .separator
-{
-	float: left;
-	width: 5px;
-	height: 22px;
-	background-image: url(qrc:/gui/gfx/separator.png);
-	background-repeat: no-repeat;
-	background-position: center;
-}
-
-.wavelet_toolbar .toolbar_button
-{
-	float: left;
-	height: 16px;
-	padding: 3px;
-	margin-left: 2px;
-	cursor: pointer;
-}
-
-.wavelet_toolbar .toolbar_button .toolbar_text
-{
-	float: left;
-	padding-left: 4px;
-	padding-right: 1px;
-	line-height: 16px;
-	font-size: 0.9em;
-}
-
-.wavelet_toolbar .toolbar_button:hover
-{
-	background: #E5ECF9 url(qrc:/gui/gfx/ui-bg_glass_100_cadef4_1x400.png) repeat-x scroll 50% 50%;
-	border: 1px solid #B8C6D9;
-	padding: 2px;
-}
-
-.wavelet_toolbar .toolbar_button:active
-{
-	background: #E5ECF9 url(qrc:/gui/gfx/ui-bg_glass_65_C3D9FF_1x400.png) repeat-x scroll 50% 50%;
-	border: 1px solid #B8C6D9;
-	padding: 3px 1px 1px 3px;
-}
-
-.wavelet_toolbar .toolbar_button.disabled
-{
-	cursor: default;
-}
-
-.wavelet_toolbar .toolbar_button.disabled .toolbar_text
-{
-	color: #BBBBBB;
-}
-
-.wavelet_toolbar .toolbar_button.disabled:hover
-{
-	background: transparent;
-	border: none;
-	padding: 3px;
-}
-
-.wavelet_toolbar .toolbar_button.disabled:active
-{
-	background: transparent;
-	border: none;
-	padding: 3px;
-}
-
-.wavelet_toolbar .toolbar_button .wavelet_toolbar_add_gadget
-{
-	float: left;
-	height: 16px;
-	width: 16px;
-	background-image: url(qrc:/gui/gfx/blip_editor_toolbarbuttons.png);
-	background-repeat: no-repeat;
-}
-
-.wavelet_toolbar .toolbar_button .wavelet_toolbar_reply
-{
-	float: left;
-	height: 16px;
-	width: 16px;
-	background-image: url(qrc:/gui/gfx/reply-all.png);
-	background-repeat: no-repeat;
-}
-
 .wavelet_participants_div
 {
 	height: 56px;
@@ -139,7 +45,7 @@
 	left: 34px;
 	width: 11px;
 	height: 11px;
-	background-image: url(qrc:/gui/gfx/user-online.png);
+	background-image: url(wavelet:load?rc=icons&name=user-online);
 }
 
 .wavelet_participant .indicator.online
@@ -176,7 +82,7 @@
 	left: 23px;
 	width: 8px;
 	height: 8px;
-	background-image: url(qrc:/gui/gfx/user-online-small.png);
+	background-image: url(wavelet:load?rc=icons&name=user-online-small);
 }
 
 .wavelet_participant.searchbox
@@ -202,7 +108,7 @@
 	left: 28px;
 	width: 8px;
 	height: 8px;
-	background-image: url(qrc:/gui/gfx/user-online-small.png);
+	background-image: url(wavelet:load?rc=gfx&name=user-online-small);
 }
 
 .wavelet_participant.searchbox .nicktext
@@ -219,7 +125,7 @@
 
 .wavelet_add_participant_widget
 {
-	background-image: url(qrc:/gui/gfx/list-add.png);
+	background-image: url(wavelet:load?rc=gfx&name=list-add);
 	width: 22px;
 	height: 22px;
 	cursor: pointer;
@@ -273,7 +179,7 @@
 	float: right;
 	padding-right: 2px;
 	background-repeat: no-repeat;
-	background-image: url(qrc:/gui/gfx/document_status.png);
+	background-image: url(wavelet:load?rc=gfx&name=document_status);
 }
 
 .wavelet_status_bar .document.clean
@@ -352,7 +258,7 @@
 {
 	width: 16px;
 	height: 16px;
-	background-image: url(qrc:/gui/gfx/delete_gadget.png);
+	background-image: url(wavelet:load?rc=gfx&name=delete_gadget);
 	background-repeat: no-repeat;
 	position: absolute;
 	right: 0;
@@ -365,7 +271,7 @@
 {
 	width: 16px;
 	height: 16px;
-	background-image: url(qrc:/gui/gfx/delete_gadget.png);
+	background-image: url(wavelet:load?rc=gfx&name=delete_gadget);
 	background-repeat: no-repeat;
 	float:right;
 	cursor: pointer;
@@ -387,7 +293,7 @@
 	height: 16px;
 	width: 16px;
 	background-repeat: no-repeat;
-	background-image: url(qrc:/gui/icons/document-edit.png);
+	background-image: url(wavelet:load?rc=icons&name=document-edit);
 	cursor: pointer;
 	margin-left: 3px;
 }
@@ -415,14 +321,14 @@
 	margin-right: 2px;
 	cursor: pointer;
 	background-color: #F5F5F5;
-	background-image: url(qrc:/gui/gfx/checkbox_bg.png);
+	background-image: url(wavelet:load?rc=gfx&name=checkbox_bg);
 	background-repeat: no-repeat;
 	background-position: center;
 }
 
 .blip_editor_control .blip_draft_check .box.checked
 {
-	background-image: url(qrc:/gui/gfx/checkbox_checked.png);
+	background-image: url(wavelet:load?rc=gfx&name=checkbox_checked);
 }
 
 .blip_editor_control.blip_contributors
@@ -430,7 +336,6 @@
 	float: left;
 	margin-left: 6px;
 	margin-right: 3px;
-	margin-top: 1px;
 }
 
 .blip_editor_control.blip_contributors > *
@@ -445,6 +350,7 @@
 	font-weight: bold;
 	font-size: 0.9em;
 	margin-right: 3px;
+	margin-top: 1px;
 }
 
 .blip_editor_control.blip_contributor_names.for_root_blip
@@ -452,74 +358,6 @@
 	margin-left: 5px;
 	float: none;
 	margin-bottom: 4px;
-}
-
-.search_widget
-{
-	height: 24px;
-	display: table;
-	table-layout: fixed;
-	border-collapse: collapse;
-	border-spacing: 0;
-	width: 100%;
-}
-
-.search_widget .input_wrapper
-{
-	display: table-cell;
-	vertical-align: top;
-}
-.search_widget input
-{
-	border: none;
-	background-repeat: repeat-x;
-	height: 20px;
-	padding-top: 4px;
-	padding-bottom: 0;
-	padding-right: 0;
-	padding-left: 0;
-	width: 100%;
-	vertical-align: top;
-	outline: none;
-	margin: 0;
-}
-.search_widget input.active 
-{
-	background-image: url(qrc:/gui/gfx/searchbox_active_c.gif);
-}
-.search_widget input.inactive
-{
-	background-image: url(qrc:/gui/gfx/searchbox_inactive_c.gif);
-}
-
-.search_widget .left_corner
-{
-	display: table-cell;
-	width: 12px;
-	height: 24px;
-}
-.search_widget .left_corner.active
-{
-	background-image: url(qrc:/gui/gfx/searchbox_active_l.gif);
-}
-.search_widget .left_corner.inactive
-{
-	background-image: url(qrc:/gui/gfx/searchbox_inactive_l.gif);
-}
-
-.search_widget .right_corner
-{
-	display: table-cell;
-	width: 21px;
-	height: 24px;
-}
-.search_widget .right_corner.active
-{
-	background-image: url(qrc:/gui/gfx/searchbox_active_r.gif);
-}
-.search_widget .right_corner.inactive
-{
-	background-image: url(qrc:/gui/gfx/searchbox_inactive_r.gif);
 }
 
 .debug_window
@@ -603,7 +441,7 @@
 
 .error_overlay .bg_div
 {
-	background: url(qrc:/gui/gfx/error-bg.png) repeat scroll 50% 50%;
+	background: url(wavelet:load?rc=gfx&name=error-bg) repeat scroll 50% 50%;
 	height: 100%;
 	clear: both;
 }
@@ -613,7 +451,7 @@
 	background-color: #CCCCCC;
 	width: 100%;
 	height: 31px;
-	background-image: url(qrc:/gui/gfx/generic_error.png);
+	background-image: url(wavelet:load?rc=gfx&name=generic_error);
 	background-repeat: no-repeat;
 	background-position: 4px 4px;
 	overflow: hidden;
@@ -662,6 +500,6 @@
 	padding: 2px;
 	margin-top: 4px;
 	margin-left: 6px;
-	background: url(qrc:/gui/gfx/view-refresh.png) no-repeat;
+	background: url(wavelet:load?rc=icons&name=view-refresh) no-repeat;
 	cursor: pointer;
 }

@@ -56,7 +56,12 @@ private:
 	OnlineStateIndicator * indicator;
 	QMap<QByteArray,WaveletWidget*> waveletWidgets;
 
+	void catchWavelets();
+	void freeWavelets();
+	void detachWavelet(WaveletWidget * ww);
+
 private slots:
+	void on_actDetachTab_triggered();
 	void on_action_Preferences_triggered();
 	void on_waveList_clicked(const QModelIndex &index);
 	void on_waveList_activated(const QModelIndex &index);
@@ -67,6 +72,7 @@ private slots:
 	void on_actNew_triggered();
 	void on_waveList_doubleClicked(const QModelIndex &index);
 	void on_actConnect_triggered();
+	void on_waveTabs_tabCloseRequested(int index);
 
 	void on_controller_stateChanged(int);
 	void on_controller_errorOccurred(const QByteArray &waveletId, const QString &tag, const QString &desc);
@@ -76,6 +82,8 @@ private slots:
 	void on_indicator_stateChangeRequested(int state);
 
 	void wavelet_closing(const QByteArray &id);
+	void wavelet_attachRequest();
+	void wavelet_deachRequest();
 };
 
 #endif // MAINWINDOW_H

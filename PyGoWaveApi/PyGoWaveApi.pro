@@ -61,5 +61,6 @@ macx {
 	FRAMEWORK_HEADERS.path = Headers
 	QMAKE_BUNDLE_DATA += FRAMEWORK_HEADERS
 	TARGET = PyGoWaveApi
+	INSTALLS -= dist_headers
 }
 

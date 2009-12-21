@@ -71,6 +71,8 @@ namespace PyGoWave {
 
 		int searchForParticipant(const QString &);
 
+		QList< QHash<QString,QString> > gadgetList();
+
 	signals:
 		void stateChanged(int);
 		void errorOccurred(const QByteArray &waveletId, const QString &tag, const QString &desc);
@@ -81,9 +83,12 @@ namespace PyGoWave {
 		void waveAdded(const QByteArray &waveId, bool created, bool initial);
 		void waveAboutToBeRemoved(const QByteArray &waveId);
 
+		void updateGadgetList(const QList< QHash<QString,QString> > &gadgetList);
+
 	public slots:
 		void textInserted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &content);
 		void textDeleted(const QByteArray &waveletId, const QByteArray &blipId, int start, int end);
+		void elementInsert(const QByteArray &waveletId, const QByteArray &blipId, int index, int type, const QVariantMap &properties);
 		void elementDelete(const QByteArray &waveletId, const QByteArray &blipId, int index);
 		void elementDeltaSubmitted(const QByteArray &waveletId, const QByteArray &blipId, int index, const QVariantMap &delta);
 		void elementSetUserpref(const QByteArray &waveletId, const QByteArray &blipId, int index, const QString &key, const QString &value);
@@ -99,6 +104,8 @@ namespace PyGoWave {
 		void createNewWavelet(const QByteArray &waveId, const QString &title);
 		void leaveWavelet(const QByteArray &waveletId);
 
+		void refreshGadgetList(bool forced = false);
+
 	private:
 		Q_DISABLE_COPY(Controller)
 
@@ -106,6 +113,7 @@ namespace PyGoWave {
 		Q_PRIVATE_SLOT(pd_func(), void _q_conn_socketDisconnected())
 		Q_PRIVATE_SLOT(pd_func(), void _q_conn_frameReceived())
 		Q_PRIVATE_SLOT(pd_func(), void _q_conn_socketStateChanged(QAbstractSocket::SocketState))
+		Q_PRIVATE_SLOT(pd_func(), void _q_conn_socketError(QAbstractSocket::SocketError))
 
 		Q_PRIVATE_SLOT(pd_func(), void _q_pingTimer_timeout())
 		Q_PRIVATE_SLOT(pd_func(), void _q_pendingTimer_timeout())
